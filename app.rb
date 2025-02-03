@@ -1,7 +1,11 @@
+require "sinatra/base"
+require_relative "lib/cms/lib"
+
 class App < Sinatra::Base
+  use CMS
 
-    get '/' do
-        erb(:"index")
-    end
-
+  get "/" do
+    "Hello world!"
+  end
 end
+
