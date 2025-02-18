@@ -1,5 +1,7 @@
 require_relative "admin/routes"
 require_relative "api/routes"
+require_relative "lib/collection"
+require_relative "lib/global"
 
 module CMS
   AdminRoutes = ::AdminRoutes
@@ -10,14 +12,17 @@ module CMS
 
     def self.load
       require CONFIG_FILE
+
+      @collections = COLLECTIONS.map { |c| Collection.from_hash(c) }
+      @globals = GLOBALS.map { |g| Global.from_hash(g) }
     end
 
     def self.collections
-      COLLECTIONS
+      @collections
     end
 
     def self.globals
-      GLOBALS
+      @globals
     end
   end
 end

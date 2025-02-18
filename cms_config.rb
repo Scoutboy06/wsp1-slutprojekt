@@ -10,31 +10,31 @@ COLLECTIONS = [
     name: "Posters",
     slug: "posters",
     upload: {
-      staticDir: "public/media/posters",
-      imageSizes: [
+      static_dir: "public/media/posters",
+      image_sizes: [
         {
           name: "thumbnail",
           width: 300,
           height: 450,
-          position: "centre"
+          position: "centre",
         },
         {
           name: "large",
           width: 1080,
           height: 1600,
-        }
-      ]
+        },
+      ],
     },
-    adminThumbnail: "thumbnail",
-    mimeTypes: ["image/*"],
-    fields: [{ name: "alt", type: "string" }]
+    admin_thumbnail: "thumbnail",
+    mime_types: ["image/*"],
+    fields: [{ name: "alt", type: "string" }],
   },
   {
     name: "Backdrops",
     slug: "backdrops",
     upload: {
-      staticDir: "public/media/backdrops",
-      imageSizes: [
+      static_dir: "public/media/backdrops",
+      image_sizes: [
         {
           name: "thumbnail",
           width: 400,
@@ -44,12 +44,12 @@ COLLECTIONS = [
           name: "large",
           width: 1920,
           height: 1080,
-        }
-      ]
+        },
+      ],
     },
-    adminThumbnail: "thumbnail",
-    mimeTypes: ["image/*"],
-    fields: [{ name: "alt", type: "text" }]
+    admin_thumbnail: "thumbnail",
+    mime_types: ["image/*"],
+    fields: [{ name: "alt", type: "text" }],
   },
   {
     name: "Users",
@@ -69,7 +69,7 @@ COLLECTIONS = [
     fields: [
       { name: "title", type: "string" },
       { name: "body", type: "string" },
-    ]
+    ],
   },
   {
     name: "Movies",
@@ -78,10 +78,10 @@ COLLECTIONS = [
       { name: "title", type: "string", required: true },
       { name: "description", type: "string" },
       { name: "tmdb_id", type: "string" },
-      { name: "poster", type: "upload", relationTo: "posters" },
-      { name: "backdrop", type: "upload", relationTo: "backdrops" },
-    ]
-  }
+      { name: "poster", type: "upload", relation_to: "posters" },
+      { name: "backdrop", type: "upload", relation_to: "backdrops" },
+    ],
+  },
 ]
 
 GLOBALS = [
@@ -97,11 +97,11 @@ GLOBALS = [
           {
             name: "page",
             type: "relationship",
-            relationTo: "pages",
+            relation_to: "pages",
             required: true,
-          }
-        ]
-      }
-    ]
-  }
+          },
+        ],
+      },
+    ],
+  },
 ]

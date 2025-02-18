@@ -8,13 +8,13 @@
   </head>
   <body>
     <div class="flex">
-      <aside class="h-screen px-2 py-4 overflow-y-auto bg-gray-200 w-80">
+      <aside class="h-screen px-2 py-4 overflow-y-auto text-black bg-white w-80">
         <% @settings.each_with_index do |setting, i| %>
           <div class="flex flex-col mb-2 group">
             <button
               type="button"
               aria-label="Toggle expansion"
-              class="flex items-center justify-between px-4 py-2 text-left rounded cursor-pointer hover:bg-gray-300"
+              class="flex items-center justify-between px-4 py-2 text-left rounded cursor-pointer hover:bg-blue-100"
               onclick="toggleCollapsed(<%= i %>)"
             >
               <span><%= setting[:name] %></span>
@@ -24,9 +24,9 @@
             <div class="collapse__content flex flex-col overflow-hidden transition-[height]" aria-hidden="false">
               <% setting[:items].each do |item| %>
                 <a
-                  class="px-8 py-2 transition-colors rounded hover:bg-gray-300"
-                  href="<%= "/admin/#{setting[:slug]}/#{item[:slug]}" %>"
-                ><%= item[:name] %></a>
+                  class="px-8 py-2 transition-colors rounded hover:bg-blue-100"
+                  href="<%= "/admin/#{setting[:slug]}/#{item.slug}" %>"
+                ><%= item.name %></a>
               <% end %>
             </div>
           </div>
