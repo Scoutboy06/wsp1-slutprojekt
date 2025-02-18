@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title><% if @title %><%= @title %><% else %>Admin<% end %></title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <div class="flex">
+      <aside class="h-screen px-2 py-4 overflow-y-auto bg-gray-200 w-80">
+        <% @settings.each_with_index do |setting, i| %>
+          <div class="flex flex-col mb-2 group">
+            <button
+              type="button"
+              aria-label="Toggle expansion"
+              class="flex items-center justify-between px-4 py-2 text-left rounded cursor-pointer hover:bg-gray-300"
+              onclick="toggleCollapsed(<%= i %>)"
+            >
+              <span><%= setting[:name] %></span>
+              <span class="transition-transform duration-200 transform rotate-0 icon group-has-aria-hidden:-rotate-90">expand_more</span>
+            </button>
+
+            <div class="collapse__content flex flex-col overflow-hidden transition-[height]" aria-hidden="false">
+              <% setting[:items].each do |item| %>
+                <a
+                  class="px-8 py-2 transition-colors rounded hover:bg-gray-300"
+                  href="<%= "/admin/#{setting[:slug]}/#{item[:slug]}" %>"
+                ><%= item[:name] %></a>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </aside>
+
+      <main class="">
+        <%= yield %>
+      </main>
+
+    </div>
+
+    <script>
+      const collapseContainers = document.querySelectorAll('.collapse__content');
+      function toggleCollapsed(i) {
+        const container = collapseContainers[i];
+        const isCollapsed = container.getAttribute('aria-hidden') === "true";
+        console.log(container.getAttribute('aria-hidden'))
+
+        if(isCollapsed) {
+          const height = container.scrollHeight;
+          container.style.height = `${height}px`;
+          container.setAttribute('aria-hidden', 'false');
+        } else {
+          container.style.height = '0px';
+          container.setAttribute('aria-hidden', 'true');
+        }
+      }
+    </script>
+  </body>
+</html>
