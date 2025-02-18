@@ -8,7 +8,7 @@
   </head>
   <body>
     <div class="flex">
-      <aside class="h-screen px-2 py-4 overflow-y-auto text-black bg-white w-80">
+      <aside class="h-screen px-2 py-4 overflow-y-auto text-black bg-white border-r border-black w-80">
         <% @settings.each_with_index do |setting, i| %>
           <div class="flex flex-col mb-2 group">
             <button
@@ -33,7 +33,7 @@
         <% end %>
       </aside>
 
-      <main class="">
+      <main class="flex-1 h-screen">
         <%= yield %>
       </main>
 
