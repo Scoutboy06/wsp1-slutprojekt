@@ -1,3 +1,8 @@
+require "sqlite3"
+
+DB = SQLite3::Database.new "db/cms_db.sqlite"
+DB.results_as_hash = true
+
 # Field types:
 # - string
 # - boolean
@@ -49,7 +54,7 @@ COLLECTIONS = [
     },
     admin_thumbnail: "thumbnail",
     mime_types: ["image/*"],
-    fields: [{ name: "alt", type: "text" }],
+    fields: [{ name: "alt", type: "string" }],
   },
   {
     name: "Users",

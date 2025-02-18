@@ -13,8 +13,12 @@ module CMS
     def self.load
       require CONFIG_FILE
 
+      @db = DB
       @collections = COLLECTIONS.map { |c| Collection.from_hash(c) }
       @globals = GLOBALS.map { |g| Global.from_hash(g) }
+
+      @collections.each { |c| c.setup_db(@db) }
+      # @globals.each { |g| g.setup_db(@db) }
     end
 
     def self.collections
@@ -23,6 +27,10 @@ module CMS
 
     def self.globals
       @globals
+    end
+
+    def self.db
+      @db
     end
   end
 end

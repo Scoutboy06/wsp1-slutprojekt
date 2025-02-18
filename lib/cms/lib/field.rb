@@ -20,4 +20,33 @@ class Field
       fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
     )
   end
+
+  def get_sql_column_string
+    parts = []
+
+    parts << @name
+    parts << get_sql_type(@type)
+    parts << "NOT NULL" if @required
+    parts << @default if @default
+
+    out = parts.join(" ")
+
+    if @relation_to
+      out << " REFERENCES #{@relation_to}(id)"
+    end
+
+    out
+  end
+end
+
+SQL_TYPES = {
+  "number" => "INTEGER",
+  "string" => "TEXT",
+  "boolean" => "BOOLEAN",
+  "upload" => "INTEGER",
+}
+
+def get_sql_type(type_str)
+  raise "Invalid field type: `#{type_str}`" if SQL_TYPES[type_str].nil?
+  SQL_TYPES[type_str]
 end
