@@ -1,0 +1,47 @@
+<div class="px-4 py-4">
+  <a
+    href="<%= request.path_info.split("/")[...-1].join("/") %>"
+    class="flex items-center gap-1 px-2 py-1 border border-black cursor-pointer w-min hover:bg-black hover:text-white"
+  >
+    <i class="icon">arrow_back</i>
+    <span>Back</span>
+  </a>
+
+  <form
+    action="/api/<%= request.path_info.split("/")[2..3].join("/") %>"
+    method="POST"
+    class="flex flex-col gap-8 mt-8"
+  >
+    <% @setting.fields.each do |field| %>
+      <div class="flex flex-col gap-2">
+        <% if field.type == "string" %>
+          <label for="<%= field.name %>">
+            <%= field.name %>
+            <% if field.required %>
+              <span class="text-red-600 ">*</span>
+            <% end %>
+          </label>
+          <input
+            type="text"
+            name="<%= field.name %>"
+            id="<%= field.name %>"
+            class="px-2 py-1 border border-black"
+            <%= field.required ? "required" : '' %>
+          />
+        <% elsif field.type == "boolean" %>
+          <label for="<%= field.name %>"><%= field.name %></label>
+          <input
+            type="checkbox"
+            name="<%= field.name %>"
+            id="<%= field.name %>"
+            class="border border-black self-baseline"
+          >
+        <% end %>
+      </div>
+    <% end %>
+    <button
+      type="submit"
+      class="py-2 border border-black cursor-pointer hover:bg-black hover:text-white"
+    >Create</button>
+  </form>
+</div>
