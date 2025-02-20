@@ -8,6 +8,7 @@
   </a>
 
   <form
+    id="create-form"
     action="/api/<%= request.path_info.split("/")[2..3].join("/") %>"
     method="POST"
     class="flex flex-col gap-8 mt-8"
@@ -45,3 +46,40 @@
     >Create</button>
   </form>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('create-form');
+    console.log(form);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const jsonData = {};
+
+      formData.forEach((val, key) => {
+        jsonData[key] = val === "on" ? true : val;
+      });
+
+      console.log(jsonData)
+
+      const res = await fetch(form.action, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(jsonData),
+      });
+
+      if(res.ok) {
+        const newItemId = await res.json();
+        const split = location.href.split('/');
+        split[split.length - 1] = newItemId;
+        location.href = split.join('/');
+      } else {
+        console.error("An error occured when submitting the data");
+      }
+    })
+  })
+</script>
