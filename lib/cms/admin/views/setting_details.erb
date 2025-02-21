@@ -26,7 +26,7 @@
           <th class="px-6 py-3">
             <input type="checkbox">
           </th>
-          <% @setting.fields.each do |field| %>
+          <% @setting.fields.filter { |it| it.admin_visible }.each do |field| %>
             <th class="px-6 py-3"><%= field.name %></th>
           <% end %>
           <th></th>
@@ -39,7 +39,7 @@
               <input type="checkbox">
             </td>
 
-            <% @setting.fields.each do |field|%>
+            <% @setting.fields.filter { |it| it.admin_visible }.each do |field|%>
               <td class="px-6 py-4 overflow-x-hidden"><%= entry[field.name] %></td>
             <% end %>
 

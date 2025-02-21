@@ -61,11 +61,11 @@ COLLECTIONS = [
     slug: "users",
     fields: [
       { name: "email", type: "string", required: true },
-      { name: "password", type: "string", required: true },
+      { name: "password", type: "string", required: true, admin_visible: false },
       { name: "first_name", type: "string" },
       { name: "last_name", type: "string" },
       { name: "phone", type: "string" },
-      { name: "admin", type: "boolean", default: false },
+      { name: "admin", type: "boolean", default: false, admin_visible: false },
     ],
   },
   {

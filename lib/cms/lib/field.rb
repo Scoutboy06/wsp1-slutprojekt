@@ -1,12 +1,13 @@
 class Field
-  attr_reader :name, :type, :required, :default, :relation_to, :fields
+  attr_reader :name, :type, :required, :default, :relation_to, :fields, :admin_visible
 
-  def initialize(name:, type:, required: false, default: nil, relation_to: nil)
+  def initialize(name:, type:, required: false, default: nil, relation_to: nil, admin_visible: true)
     @name = name
     @type = type
     @required = required
     @default = default
     @relation_to = relation_to
+    @admin_visible = admin_visible
   end
 
   def self.from_hash(hash)
@@ -16,6 +17,7 @@ class Field
       required: hash[:required] || false,
       default: hash[:default],
       relation_to: hash[:relation_to],
+      admin_visible: hash[:admin_visible] == nil ? true : hash[:admin_visible],
     )
   end
 
