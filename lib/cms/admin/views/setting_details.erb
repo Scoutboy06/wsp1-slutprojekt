@@ -4,7 +4,7 @@
     href="<%= request.path_info + "/new" %>"
     role="button"
     aria-label="Create new entry"
-    class="h-auto p-1 border border-black rounded-full cursor-pointer aspect-square"
+    class="flex p-1 border border-black rounded-full cursor-pointer h-min aspect-square"
   >
     <i class="icon">add</i>
   </a>
@@ -19,18 +19,39 @@
     >
     </form>
 
-    <table>
-      <thead>
+  <div class="overflow-x-auto">
+    <table class="w-full border-spacing-2">
+      <thead class="text-sm text-left text-gray-700 uppercase bg-gray-50">
         <tr>
-          <th>
+          <th class="px-6 py-3">
             <input type="checkbox">
-          </td>
+          </th>
           <% @setting.fields.each do |field| %>
-            <th><%= field.name %></th>
+            <th class="px-6 py-3"><%= field.name %></th>
           <% end %>
+          <th></th>
         </tr>
       </thead>
       <tbody>
+        <% @entries.each do |entry| %>
+          <tr class="border-gray-200 odd:bg-white even:bg-gray-50 [&:not(:last-child)]:border-b">
+            <td class="px-6 py-4">
+              <input type="checkbox">
+            </td>
+
+            <% @setting.fields.each do |field|%>
+              <td class="px-6 py-4 overflow-x-hidden"><%= entry[field.name] %></td>
+            <% end %>
+
+            <td class="px-6 py-4">
+              <a
+                href="<%= request.path_info %>/<%= entry["id"] %>/edit"
+                class="text-blue-600 hover:underline"
+              >Edit</a>
+            </td>
+          </tr>
+        <% end %>
       </tbody>
     </table>
   </div>
+</div>

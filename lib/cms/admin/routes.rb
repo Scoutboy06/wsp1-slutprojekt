@@ -5,6 +5,7 @@ class AdminRoutes < Sinatra::Base
   before do
     @collections = CMS::Config.collections
     @globals = CMS::Config.globals
+    @db = CMS::Config.db
 
     @settings = []
 
@@ -29,6 +30,11 @@ class AdminRoutes < Sinatra::Base
   get "/admin/collections/:slug" do |slug|
     @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
+
+    limit = 10
+
+    @entries = @db.execute("SELECT * FROM #{@setting.slug} LIMIT ?", [limit])
+
     erb :setting_details
   end
 
