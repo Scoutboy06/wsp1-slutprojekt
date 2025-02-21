@@ -1,4 +1,5 @@
 require "sinatra"
+require "bcrypt"
 require "json"
 
 class ApiRoutes < Sinatra::Base
@@ -27,10 +28,11 @@ class ApiRoutes < Sinatra::Base
     data = JSON.parse(request.body.read)
 
     field_names = @setting.fields.map { |field| field.name }
-    field_values = field_names.map do |name|
-      value = data.fetch(name, nil)
+    field_values = @setting.fields.map do |field|
+      value = data.fetch(field.name, nil)
       value = 1 if value == true
       value = 0 if value == false
+      value = BCrypt::Password.create(value) if field.type == "password"
       value
     end
 
