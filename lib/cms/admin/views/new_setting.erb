@@ -14,8 +14,8 @@
     class="flex flex-col gap-8 mt-8"
   >
     <% @setting.fields.each do |field| %>
-      <div class="flex flex-col gap-2">
-        <% if field.type == "string" %>
+      <% if field.type == "string" %>
+        <div class="flex flex-col gap-2">
           <label for="<%= field.name %>">
             <%= field.name %>
             <% if field.required %>
@@ -28,17 +28,51 @@
             id="<%= field.name %>"
             class="px-2 py-1 border border-black"
             <%= field.required ? "required" : '' %>
-          />
-        <% elsif field.type == "boolean" %>
-          <label for="<%= field.name %>"><%= field.name %></label>
+          >
+        </div>
+      <% elsif field.type == "boolean" %>
+        <div class="flex items-center gap-2">
           <input
             type="checkbox"
             name="<%= field.name %>"
             id="<%= field.name %>"
-            class="border border-black self-baseline"
+            class="border border-black"
           >
-        <% end %>
-      </div>
+          <label for="<%= field.name %>"><%= field.name %></label>
+        </div>
+      <% elsif field.type == "email" %>
+        <div class="flex flex-col gap-2">
+          <label for="<%= field.name %>">
+            <%= field.name %>
+            <% if field.required %>
+              <span class="text-red-600 ">*</span>
+            <% end %>
+          </label>
+          <input
+            type="email"
+            name="<%= field.name %>"
+            id="<%= field.name %>"
+            class="px-2 py-1 border border-black"
+            <%= field.required ? "required" : '' %>
+          >
+        </div>
+      <% elsif field.type == "password" %>
+        <div class="flex flex-col gap-2">
+          <label for="<%= field.name %>">
+            <%= field.name %>
+            <% if field.required %>
+              <span class="text-red-600 ">*</span>
+            <% end %>
+          </label>
+          <input
+            type="password"
+            name="<%= field.name %>"
+            id="<%= field.name %>"
+            class="px-2 py-1 border border-black"
+            <%= field.required ? "required" : '' %>
+          >
+        </div>
+      <% end %>
     <% end %>
     <button
       type="submit"
@@ -50,7 +84,6 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('create-form');
-    console.log(form);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

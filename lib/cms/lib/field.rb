@@ -44,6 +44,8 @@ SQL_TYPES = {
   "string" => "TEXT",
   "boolean" => "BOOLEAN",
   "upload" => "INTEGER",
+  "email" => "TEXT",
+  "password" => "TEXT",
 }
 
 def get_sql_type(type_str)

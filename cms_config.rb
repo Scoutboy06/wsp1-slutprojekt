@@ -60,8 +60,8 @@ COLLECTIONS = [
     name: "Users",
     slug: "users",
     fields: [
-      { name: "email", type: "string", required: true },
-      { name: "password", type: "string", required: true, admin_visible: false },
+      { name: "email", type: "email", required: true },
+      { name: "password", type: "password", required: true, admin_visible: false },
       { name: "first_name", type: "string" },
       { name: "last_name", type: "string" },
       { name: "phone", type: "string" },
