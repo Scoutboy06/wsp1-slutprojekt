@@ -34,7 +34,7 @@
       </thead>
       <tbody>
         <% @entries.each do |entry| %>
-          <tr class="border-gray-200 odd:bg-white even:bg-gray-50 [&:not(:last-child)]:border-b">
+          <tr class="border-gray-200 even:bg-gray-50 [&:not(:last-child)]:border-b">
             <td class="px-6 py-4">
               <input type="checkbox">
             </td>
@@ -43,11 +43,16 @@
               <td class="px-6 py-4 overflow-x-hidden"><%= entry[field.name] %></td>
             <% end %>
 
-            <td class="px-6 py-4">
+            <td class="flex gap-4 px-6 py-4">
               <a
                 href="<%= request.path_info %>/<%= entry["id"] %>/edit"
                 class="text-blue-600 hover:underline"
               >Edit</a>
+              <button
+                type="button"
+                class="text-red-600 cursor-pointer delete-btn hover:underline"
+                data-item-id="<%= entry["id"] %>"
+              >Delete</button>
             </td>
           </tr>
         <% end %>
@@ -55,3 +60,25 @@
     </table>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const deleteBtns = document.getElementsByClassName('delete-btn');
+
+    async function sendDeleteRequest(id) {
+      const url = location.href.replace('/admin/', '/api/') + '/' + id
+      const res = await fetch(url, { method: 'DELETE' });
+      if(res.ok) {
+        location.reload();
+      } else {
+        alert("Error 500: Internal server error");
+      }
+    }
+
+    for(const btn of deleteBtns) {
+      btn.addEventListener('click', () => {
+        sendDeleteRequest(btn.getAttribute('data-item-id'));
+      });
+    }
+  })
+</script>

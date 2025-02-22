@@ -49,4 +49,18 @@ class ApiRoutes < Sinatra::Base
     status 201
     @db.last_insert_row_id.to_json
   end
+
+  delete "/api/collections/:slug/:id" do |slug, id|
+    @setting = @collections.find { |c| c.slug == slug }
+    halt 404 if @setting.nil?
+
+    @db.execute("DELETE FROM #{@setting.slug} WHERE id = ?", [id.to_i])
+    rows_deleted = @db.changes
+
+    if rows_deleted > 0
+      status 200
+    else
+      halt 404, { error: "Record not found" }.to_json
+    end
+  end
 end
