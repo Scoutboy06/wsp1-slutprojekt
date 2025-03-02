@@ -1,4 +1,4 @@
-<div class="px-4 py-4">
+<div x-data="formHandler" class="px-4 py-4">
   <a
     href="<%= request.path_info.split("/")[...-1].join("/") %>"
     class="flex items-center gap-1 px-2 py-1 border border-black cursor-pointer w-min hover:bg-black hover:text-white"
@@ -9,10 +9,11 @@
 
   <form
     id="create-form"
-    action="/api/<%= request.path_info.split("/")[2..3].join("/") %>"
+    action="/admin/collections/<%= @setting.slug %>"
+    enctype="multipart/form-data"
     method="POST"
     class="flex flex-col gap-8 mt-8"
-  >
+  >  
     <% @setting.fields.each do |field| %>
       <% if field.type == "string" %>
         <div class="flex flex-col gap-2">
@@ -72,8 +73,35 @@
             <%= field.required ? "required" : '' %>
           >
         </div>
+      <% elsif field.type == "upload" %>
+        <div class="flex flex-col gap-2">
+          <label for="<%= field.name %>">
+            <%= field.name %>
+            <% if field.required %>
+              <span class="text-red-600">*</span>
+            <% end%>
+          </label>
+          <div class="px-4 py-4 border border-black">
+            <input
+              type="file"
+              name="<%= field.name %>"
+              accept="image/*"
+              @change="handleFileUpload($event, '<%= field.name %>')"
+            >
+            <template x-if="filePreviews['<%= field.name %>']">
+              <div class="relative p-2 mt-2 border">
+                <img :src="filePreviews['<%= field.name %>'].preview" class="w-auto h-20">
+                <p class="" x-text="filePreviews['<%= field.name %>'].name"></p>
+                <p class="" x-text="filePreviews['<%= field.name %>'].size"></p>
+                <p class="" x-text="filePreviews['<%= field.name %>'].dimensions"></p>
+                <button type="button" @click="removeFile('<%= field.name %>')" class="icon">delete</button>
+              </div>
+            </template>
+          </div>
+        </div>
       <% end %>
     <% end %>
+
     <button
       type="submit"
       class="py-2 border border-black cursor-pointer hover:bg-black hover:text-white"
@@ -82,37 +110,36 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('create-form');
+document.addEventListener('alpine:init', () => {
+  Alpine.data('formHandler', () => ({
+    filePreviews: {},
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    handleFileUpload(e, fieldName) {
+      const file = e.target.files[0];
+      if(!file || !file.type.startsWith('image/')) return;
 
-      const formData = new FormData(form);
-      const jsonData = {};
+      const reader = new FileReader();
 
-      formData.forEach((val, key) => {
-        jsonData[key] = val === "on" ? true : val;
-      });
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
 
-      console.log(jsonData)
-
-      const res = await fetch(form.action, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(jsonData),
-      });
-
-      if(res.ok) {
-        const newItemId = await res.json();
-        const split = location.href.split('/');
-        split[split.length - 1] = newItemId;
-        location.href = split.join('/');
-      } else {
-        console.error("An error occured when submitting the data");
+        img.onload = () => {
+          this.filePreviews[fieldName] = {
+            name: file.name,
+            size: (file.size / 1024).toFixed(2) + ' KB',
+            dimensions: `${img.width} x ${img.height}`,
+            preview: e.target.result,
+          };
+        }
       }
-    })
-  })
+
+      reader.readAsDataURL(file);
+    },
+
+    removeFile(fieldName) {
+      delete this.filePreviews[fieldName];
+    },
+  }))
+})
 </script>

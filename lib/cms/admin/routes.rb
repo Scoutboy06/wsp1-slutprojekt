@@ -1,7 +1,12 @@
 require "sinatra/base"
 require_relative "../lib"
+require_relative "../lib/media"
 
 class AdminRoutes < Sinatra::Base
+  configure do
+    set :public_folder, 'lib/cms/public'
+  end
+
   before do
     @collections = CMS::Config.collections
     @globals = CMS::Config.globals
@@ -42,6 +47,44 @@ class AdminRoutes < Sinatra::Base
     @setting = @collections.find { |c| c.slug == slug}
     halt 404 if @setting.nil?
     erb :new_setting
+  end
+
+  post "/admin/collections/:slug" do |slug|
+    @setting = @collections.find { |c| c.slug == slug }
+    halt 404 if @setting.nil?
+
+    values = []
+
+    for field in @setting.fields
+      value = nil
+
+      if field.type == "upload"
+        file_meta = Media.upload(
+          db: @db,
+          tempfile: params[field.name][:tempfile],
+          filename: params[field.name][:filename],
+          file_path: "public/uploads/"
+        )
+
+        value = file_meta[:id]
+      elsif field.type == "password"
+        value = BCrypt::Password.create(params[field.slug])
+      else
+        value = params[field.name]
+      end
+
+      values.push(value)
+    end
+
+    exec_str = "INSERT INTO #{@setting.slug}
+    (#{@setting.fields.map { |f| f.name }.join(', ')})
+    VALUES (#{values.map { |_| "?" }.join(',')})"
+    puts exec_str
+    p values
+
+    @db.execute(exec_str, values)
+
+    status 201
   end
 
   get "/admin/globals/:slug" do |slug|

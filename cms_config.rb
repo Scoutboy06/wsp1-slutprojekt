@@ -12,51 +12,6 @@ DB.results_as_hash = true
 
 COLLECTIONS = [
   {
-    name: "Posters",
-    slug: "posters",
-    upload: {
-      static_dir: "public/media/posters",
-      image_sizes: [
-        {
-          name: "thumbnail",
-          width: 300,
-          height: 450,
-          position: "centre",
-        },
-        {
-          name: "large",
-          width: 1080,
-          height: 1600,
-        },
-      ],
-    },
-    admin_thumbnail: "thumbnail",
-    mime_types: ["image/*"],
-    fields: [{ name: "alt", type: "string" }],
-  },
-  {
-    name: "Backdrops",
-    slug: "backdrops",
-    upload: {
-      static_dir: "public/media/backdrops",
-      image_sizes: [
-        {
-          name: "thumbnail",
-          width: 400,
-          height: 225,
-        },
-        {
-          name: "large",
-          width: 1920,
-          height: 1080,
-        },
-      ],
-    },
-    admin_thumbnail: "thumbnail",
-    mime_types: ["image/*"],
-    fields: [{ name: "alt", type: "string" }],
-  },
-  {
     name: "Users",
     slug: "users",
     fields: [
@@ -83,8 +38,8 @@ COLLECTIONS = [
       { name: "title", type: "string", required: true },
       { name: "description", type: "string" },
       { name: "tmdb_id", type: "string" },
-      { name: "poster", type: "upload", relation_to: "posters" },
-      { name: "backdrop", type: "upload", relation_to: "backdrops" },
+      { name: "poster", type: "upload", relation_to: "media" },
+      { name: "backdrop", type: "upload", relation_to: "media" },
     ],
   },
 ]

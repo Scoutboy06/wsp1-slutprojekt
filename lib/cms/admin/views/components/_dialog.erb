@@ -1,0 +1,17 @@
+<dialog
+  open
+  id="<%= id %>"
+  class="-translate-x-1/2 -translate-y-1/2 border border-black left-1/2 top-1/2 max-w-[100vw-20rem] w-[40rem] p-6 rounded-md bg-white"
+>
+  <div class="flex justify-between mb-4">
+    <p class="text-2xl"><%= title %></p>
+    <button
+      class="cursor-pointer"
+      hx-on:click="this.closest('#<%= id %>').close()"
+    ><i class="icon">close</i></button>
+  </div>
+
+  <div class="w-full">
+    <% content %>
+  </div>
+</dialog>

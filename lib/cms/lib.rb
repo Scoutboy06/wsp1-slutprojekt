@@ -14,11 +14,17 @@ module CMS
       require CONFIG_FILE
 
       @db = DB
-      @collections = COLLECTIONS.map { |c| Collection.from_hash(c) }
-      @globals = GLOBALS.map { |g| Global.from_hash(g) }
 
-      @collections.each { |c| c.setup_db(@db) }
-      # @globals.each { |g| g.setup_db(@db) }
+      if @collections.nil?
+        @collections = COLLECTIONS.map { |c| Collection.from_hash(c) }
+        @collections << Media.get_collection
+        @collections.each { |c| c.setup_db(@db) }
+      end
+
+      if @globals.nil?
+        @globals = GLOBALS.map { |g| Global.from_hash(g) }
+        # @globals.each { |g| g.setup_db(@db) }
+      end
     end
 
     def self.collections
