@@ -23,7 +23,7 @@ class AdminRoutes < Sinatra::Base
     end
   end
 
-  get "/admin" do
+  get "/admin/?" do
     erb :index
   end
 
@@ -57,6 +57,7 @@ class AdminRoutes < Sinatra::Base
       "SELECT * FROM #{@setting.slug} WHERE id = ?",
       [id]
     ).first
+    halt 404 if @entry.nil?
 
     erb :edit_entry
   end
@@ -80,7 +81,7 @@ class AdminRoutes < Sinatra::Base
 
         value = file_meta[:id]
       elsif field.type == "password"
-        value = BCrypt::Password.create(params[field.slug])
+        value = BCrypt::Password.create(params[field.name])
       else
         value = params[field.name]
       end
@@ -97,6 +98,7 @@ class AdminRoutes < Sinatra::Base
     @db.execute(exec_str, values)
 
     status 201
+    redirect "/admin/collections/#{@setting.slug}"
   end
 
   get "/admin/globals/:slug" do |slug|

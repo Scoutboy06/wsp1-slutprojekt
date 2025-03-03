@@ -91,9 +91,9 @@
             <template x-if="filePreviews['<%= field.name %>']">
               <div class="relative p-2 mt-2 border">
                 <img :src="filePreviews['<%= field.name %>'].preview" class="w-auto h-20">
-                <p class="" x-text="filePreviews['<%= field.name %>'].name"></p>
-                <p class="" x-text="filePreviews['<%= field.name %>'].size"></p>
-                <p class="" x-text="filePreviews['<%= field.name %>'].dimensions"></p>
+                <p x-text="filePreviews['<%= field.name %>'].name"></p>
+                <p x-text="filePreviews['<%= field.name %>'].size"></p>
+                <p x-text="filePreviews['<%= field.name %>'].dimensions"></p>
                 <button type="button" @click="removeFile('<%= field.name %>')" class="icon">delete</button>
               </div>
             </template>
