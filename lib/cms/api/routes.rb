@@ -21,6 +21,35 @@ class ApiRoutes < Sinatra::Base
     end
   end
 
+  get "/api/collections/:slug" do |slug|
+    @setting = @collections.find { |c| c.slug == slug }
+    halt 404 if @setting.nil?
+
+    limit = params[:limit]&.to_i || 50
+    offset = (params[:page]&.to_i * limit) : 0
+
+    data = @db.execute(
+      "SELECT *
+      FROM #{@setting.slug}
+      LIMIT ?
+      OFFSET ?
+    ", [limit, offset])
+
+    data.to_json
+  end
+
+  get "/api/collections/:slug/:id" do |slug, id|
+    @setting = @collections.find { |c| c.slug == slug }
+    halt 404 if @setting.nil?
+
+    data = @db.execute(
+      "SELECT * FROM #{@setting.slug} WHERE id = ?",
+      [id]
+    ).first
+
+    data.to_json
+  end
+
   post "/api/collections/:slug" do |slug|
     @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
