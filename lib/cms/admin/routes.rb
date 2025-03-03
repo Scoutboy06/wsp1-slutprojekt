@@ -40,13 +40,25 @@ class AdminRoutes < Sinatra::Base
 
     @entries = @db.execute("SELECT * FROM #{@setting.slug} LIMIT ?", [limit])
 
-    erb :setting_details
+    erb :entry_details
   end
 
   get "/admin/collections/:slug/new" do |slug|
     @setting = @collections.find { |c| c.slug == slug}
     halt 404 if @setting.nil?
-    erb :new_setting
+    erb :new_entry
+  end
+
+  get "/admin/collections/:slug/:id/edit" do |slug, id|
+    @setting = @collections.find { |c| c.slug == slug }
+    halt 404 if @setting.nil?
+
+    @entry = @db.execute(
+      "SELECT * FROM #{@setting.slug} WHERE id = ?",
+      [id]
+    ).first
+
+    erb :edit_entry
   end
 
   post "/admin/collections/:slug" do |slug|
@@ -90,6 +102,6 @@ class AdminRoutes < Sinatra::Base
   get "/admin/globals/:slug" do |slug|
     @setting = @globals.find { |g| g.slug == slug }
     halt 404 if @setting.nil?
-    erb :setting_details
+    erb :entry_details
   end
 end

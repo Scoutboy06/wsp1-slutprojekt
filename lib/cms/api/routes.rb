@@ -25,8 +25,8 @@ class ApiRoutes < Sinatra::Base
     @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
 
-    limit = params[:limit]&.to_i || 50
-    offset = (params[:page]&.to_i * limit) : 0
+    limit = Integer(params[:limit], exception: false) || 50
+    offset = (Integer(params[:page], exception: false) || 0) * limit
 
     data = @db.execute(
       "SELECT *
