@@ -1,18 +1,7 @@
+  
 <div
-  x-data='formHandler({ <%=
-      @setting.fields
-        .select { |field| field.type == "upload" }
-        .map do |field|
-          "\"#{field.name}\": " + {
-            name: nil,
-            size: nil,
-            dimensions: "Hello world",
-            preview: nil,
-          }.to_json
-        end
-        .join(", ")
-    %> })'
   class="px-4 py-4"
+  x-data='formHandler'
 >
   <a
     href="<%= request.path_info.split("/")[...-2].join("/") %>"
@@ -130,7 +119,19 @@
 <script>
 document.addEventListener('alpine:init', () => {
   Alpine.data('formHandler', (initialPreviews) => ({
-    filePreviews: initialPreviews || {},
+    filePreviews: Object.assign({}, initialPreviews || {}, {<%=
+      @setting.fields
+        .select { |field| field.type == "upload" }
+        .map do |field|
+          "\"#{field.name}\":" + {
+            name: "Test \"1\"",
+            size: nil,
+            dimensions: "Test '2'",
+            preview: "/uploads/1-forrest_gump_poster.jpg",
+          }.to_json
+        end
+        .join(", ")
+    %>}),
 
     handleFileUpload(e, fieldName) {
       const file = e.target.files[0];

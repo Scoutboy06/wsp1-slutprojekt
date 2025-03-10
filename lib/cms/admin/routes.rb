@@ -1,6 +1,7 @@
 require "sinatra/base"
 require_relative "../lib"
 require_relative "../lib/media"
+require_relative "../utils/nested_query"
 
 class AdminRoutes < Sinatra::Base
   configure do
@@ -52,6 +53,13 @@ class AdminRoutes < Sinatra::Base
   get "/admin/collections/:slug/:id/edit" do |slug, id|
     @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
+
+    nested_query(
+      all_collections: @collections,
+      collection: @setting,
+      id: id,
+      db: @db
+    )
 
     @entry = @db.execute(
       "SELECT * FROM #{@setting.slug} WHERE id = ?",
