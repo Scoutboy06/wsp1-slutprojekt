@@ -33,6 +33,7 @@ class Field
 
     if @relation_to
       out << " REFERENCES #{@relation_to}(id)"
+      out << " ON DELETE #{@required ? 'CASCACE' : 'SET NULL'}"
     end
 
     out

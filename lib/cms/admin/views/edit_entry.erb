@@ -13,7 +13,7 @@
 
   <form
     id="edit-form"
-    action="/admin/collections/<%= @setting.slug %>/edit"
+    action="/admin/collections/<%= @setting.slug %>/<%= @entry["id"] %>/edit"
     enctype="multipart/form-data"
     method="POST"
     class="flex flex-col gap-8 mt-8"
@@ -123,11 +123,14 @@ document.addEventListener('alpine:init', () => {
       @setting.fields
         .select { |field| field.type == "upload" }
         .map do |field|
+          nested_field = @entry[field.name]
           "\"#{field.name}\":" + {
-            name: "Test \"1\"",
+            name: nested_field["file_name"],
             size: nil,
-            dimensions: "Test '2'",
-            preview: "/uploads/1-forrest_gump_poster.jpg",
+            dimensions: nested_field["width"] && nested_field["height"] ?
+              "#{nested_field["width"]} x #{nested_field["height"]}":
+              nil,
+            preview: nested_field["url"],
           }.to_json
         end
         .join(", ")

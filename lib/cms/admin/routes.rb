@@ -54,20 +54,23 @@ class AdminRoutes < Sinatra::Base
     @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
 
-    nested_query(
+    @entry = nested_select(
       all_collections: @collections,
       collection: @setting,
       id: id,
       db: @db
-    )
-
-    @entry = @db.execute(
-      "SELECT * FROM #{@setting.slug} WHERE id = ?",
-      [id]
     ).first
     halt 404 if @entry.nil?
 
     erb :edit_entry
+  end
+
+  post "/admin/collections/:slug/:id/edit" do |slug, id|
+    # {"title"=>"Forrest Gump", "description"=>"", "tmdb_id"=>"13-forrest-gump", "slug"=>"movies", "id"=>"3"}
+    @setting = @collections.find { |c| c.slug == slug }
+
+    p params
+    redirect "/admin/collections/#{slug}/#{id}/edit"
   end
 
   post "/admin/collections/:slug" do |slug|

@@ -2,6 +2,7 @@ require "sqlite3"
 
 DB = SQLite3::Database.new "db/cms_db.sqlite"
 DB.results_as_hash = true
+DB.execute("PRAGMA foreign_keys = ON;")
 
 # Field types:
 # - string
