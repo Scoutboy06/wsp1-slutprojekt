@@ -91,7 +91,7 @@ class AdminRoutes < Sinatra::Base
           db: @db,
           tempfile: params[field.name][:tempfile],
           filename: params[field.name][:filename],
-          file_path: "public/uploads/"
+          out_dir: "public/uploads/"
         )
 
         value = file_meta[:id]

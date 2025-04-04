@@ -41,4 +41,4 @@ module CMS
   end
 end
 
-CMS::Config.load
+# CMS::Config.load

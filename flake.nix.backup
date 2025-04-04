@@ -1,0 +1,25 @@
+{
+  description = "Ruby development environment";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+  outputs = { self, nixpkgs }:
+    let pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    in {
+      devShells.x86_64-linux.default = pkgs.mkShell {
+        buildInputs = with pkgs; [
+          ruby
+          bundler
+          rubyPackages.rubocop
+          rubyPackages.solargraph
+          gnumake
+          gcc
+          sqlite
+        ];
+
+        shellHook = ''
+          echo "Welcome to the Ruby development environment!"
+          ruby --version
+        '';
+      };
+    };
+}
