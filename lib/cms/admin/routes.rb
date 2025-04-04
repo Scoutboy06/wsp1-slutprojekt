@@ -39,7 +39,11 @@ class AdminRoutes < Sinatra::Base
 
     limit = 10
 
-    @entries = @db.execute("SELECT * FROM #{@setting.slug} LIMIT ?", [limit])
+    @entries = nested_select(
+      all_collections: @collections,
+      collection: @setting,
+      db: @db
+    )
 
     erb :entry_details
   end

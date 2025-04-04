@@ -121,7 +121,7 @@ document.addEventListener('alpine:init', () => {
   Alpine.data('formHandler', (initialPreviews) => ({
     filePreviews: Object.assign({}, initialPreviews || {}, {<%=
       @setting.fields
-        .select { |field| field.type == "upload" }
+        .select { |field| field.type == "upload" && !!@entry[field.name]['url'] }
         .map do |field|
           nested_field = @entry[field.name]
           "\"#{field.name}\":" + {

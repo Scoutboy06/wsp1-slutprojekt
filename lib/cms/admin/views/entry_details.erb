@@ -40,7 +40,13 @@
             </td>
 
             <% @setting.fields.filter { |it| it.admin_visible }.each do |field|%>
-              <td class="px-6 py-4 overflow-x-hidden"><%= entry[field.name] %></td>
+              <td class="px-6 py-4 overflow-x-hidden">
+                <% if field.type == "upload" %>
+                  <img src="<%= entry[field.name]["url"] %>" class="h-16">
+                <% else %>
+                  <%= entry[field.name] %>
+                <% end %>
+              </td>
             <% end %>
 
             <td class="flex gap-4 px-6 py-4">

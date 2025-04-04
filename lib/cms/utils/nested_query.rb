@@ -34,7 +34,7 @@
 #   }
 # }
 # ```
-def nested_select(all_collections:, collection:, id:, db:)
+def nested_select(all_collections:, collection:, id: nil, db:)
   query_parts = []
   query_values = []
 
