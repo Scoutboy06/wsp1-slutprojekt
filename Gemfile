@@ -7,4 +7,5 @@ gem "rerun"
 gem "sqlite3"
 gem "webrick"
 gem "bcrypt"
-
+gem "mini_mime"
+gem "fastimage"

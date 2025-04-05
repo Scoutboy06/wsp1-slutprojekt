@@ -1,17 +1,31 @@
 require "tempfile"
 require "fileutils"
+require "mini_mime"
+require "fastimage"
 require_relative "./collection"
 
 class Media
   def self.upload(db:, tempfile:, filename:, out_dir:)
     out_file_path = File.join(out_dir, filename)
 
+    mime_type = MiniMime.lookup_by_filename(filename)&.content_type
+    width = nil
+    height = nil
+
+    if mime_type&.start_with?('image/')
+      dimensions = FastImage.size(tempfile.path)
+      if dimensions
+        width, height = dimensions
+      else
+        puts "Failed to determine image dimensions using FastImage"
+      end
+    end
+
     # 1. Create a database entry
-    # TODO: mime_type, width, height
     db.execute(
       "INSERT INTO media (file_path, url, file_name, mime_type, width, height, alt)
       VALUES (?,?,?,?,?,?,?)",
-      ["temp", "temp", filename, "image/jpeg", nil, nil, nil] 
+      ["temp", "temp", filename, mime_type, width, height, nil] 
     )
 
     # 2. Get the last inserted ID
