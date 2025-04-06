@@ -1,5 +1,6 @@
 require_relative "./field"
 require_relative "./upload_config"
+require_relative '../lib'
 
 class Collection
   attr_reader :name, :slug, :upload, :admin_thumbnail, :mime_types, :fields
@@ -33,9 +34,10 @@ class Collection
     );"
 
     db.execute(exec_str)
+    @db = db
   end
 
-  def select(db:, id: nil, limit: nil, offset: nil)
+  def select(id: nil, limit: nil, offset: nil)
     exec_str = "SELECT * FROM #{self.slug}"
     exec_str << " WHERE id = ?" unless id.nil?
     exec_str << " LIMIT ?" unless limit.nil?
@@ -46,10 +48,11 @@ class Collection
     values << limit unless limit.nil?
     values << offset unless offset.nil?
 
-    db.execute(exec_str, values)
+    @db.execute(exec_str, values)
   end
 
-  def nested_select(all_collections:, id: nil, limit: nil, offset: nil, db:)
+  def nested_select(id: nil, limit: nil, offset: nil)
+    all_collections = CMS::Config.collections
     query_parts = []
     query_values = []
 
@@ -97,7 +100,7 @@ class Collection
 
     query_str = query_parts.join("\n  ")
 
-    data = db.execute(query_str, query_values)
+    data = @db.execute(query_str, query_values)
 
     for result_item in data
       for field in fields_with_relations
@@ -119,7 +122,7 @@ class Collection
     data
   end
 
-  def insert(db:, data:)
+  def insert(data:)
     field_names = self.fields.map { |field| field.name }
     field_values = self.fields.map do |field|
       value = data.fetch(field.name, nil)
@@ -134,10 +137,53 @@ class Collection
       VALUES (#{field_names.map { |_| '?' }.join(',')})
     "
 
-    db.execute(exec_str, field_values)
+    @db.execute(exec_str, field_values)
   end
 
-  def delete(db:, id:)
-    db.execute("DELETE FROM #{self.slug} WHERE id = ?", [id])
+  def update(id:, data:)
+    puts "------------------------"
+    query_parts = []
+    values = []
+
+    query_parts << "BEGIN TRANSACTION;\n"
+
+    query, _values = self.get_update_query(data: data, id: id)
+    query_parts << query;
+    values.push(*_values)
+
+    query_parts << "\nCOMMIT;"
+    
+    exec_str = query_parts.join("\n")
+    puts exec_str
+    puts "----"
+    p values
+    puts "------------------------"
+    @db.execute(exec_str, values)
+  end
+
+  private def get_update_query(data:, id: nil)
+    query_parts = []
+    values = []
+
+    # UPDATE part
+    query_parts << "UPDATE #{self.slug}"
+
+    # SET part
+    self_owned_fields = self.fields.select { |field| !field.relation_to }
+    set_values = self_owned_fields.map { |field| [field.name, data.fetch(field.name, nil)] }
+    query_parts << "SET #{set_values.map { |v| "#{v[0]} = ?" }.join(', ')}"
+    values.push(*set_values.map { |v| v[1] })
+
+    # WHERE part
+    query_parts << "WHERE id = ?" unless id.nil?
+    values << id unless id.nil?
+
+    query_parts << ';'
+
+    return [query_parts.join("\n"), values]
+  end
+
+  def delete(id:)
+    @db.execute("DELETE FROM #{self.slug} WHERE id = ?", [id])
   end
 end

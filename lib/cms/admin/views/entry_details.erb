@@ -1,5 +1,5 @@
 <header class="flex items-center w-full gap-6 px-4 py-2 border-b border-black">
-  <p class="text-2xl"><%= @setting.name %></p>
+  <p class="text-2xl"><%= @collection.name %></p>
   <a
     href="<%= request.path_info + "/new" %>"
     role="button"
@@ -26,7 +26,7 @@
           <th class="px-6 py-3">
             <input type="checkbox">
           </th>
-          <% @setting.fields.filter { |it| it.admin_visible }.each do |field| %>
+          <% @collection.fields.filter { |it| it.admin_visible }.each do |field| %>
             <th class="px-6 py-3"><%= field.name %></th>
           <% end %>
           <th></th>
@@ -39,10 +39,10 @@
               <input type="checkbox">
             </td>
 
-            <% @setting.fields.filter { |it| it.admin_visible }.each do |field|%>
+            <% @collection.fields.filter { |it| it.admin_visible }.each do |field|%>
               <td class="px-6 py-4 overflow-x-hidden">
                 <% if field.type == "upload" %>
-                  <img src="<%= entry[field.name]["url"] %>" class="h-16">
+                  <img src="<%= entry[field.name]["url"] %>" class="h-16 object-contain">
                 <% else %>
                   <%= entry[field.name] %>
                 <% end %>

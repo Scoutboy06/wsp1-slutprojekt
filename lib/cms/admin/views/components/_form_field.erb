@@ -1,0 +1,12 @@
+<% case field.type %>
+<% when "string" %>
+  <%= partial 'components/_string_field', :locals => { :field => field, :value => value } %>
+<% when "boolean" %>
+  <%= partial 'components/_boolean_field', :locals => { :field => field, :value => value } %>
+<% when "email" %>
+  <%= partial 'components/_email_field', :locals => { :field => field, :value => value } %>
+<% when "password" %>
+  <%= partial 'components/_password_field', :locals => { :field => field, :value => value } %>
+<% when "upload" %>
+  <%= partial 'components/_upload_field', :locals => { :field => field, :value => value } %>
+<% end %>

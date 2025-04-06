@@ -1,11 +1,18 @@
 require "sinatra/base"
 require_relative "../lib"
 require_relative "../lib/media"
-require_relative "../utils/nested_query"
 
 class AdminRoutes < Sinatra::Base
   configure do
-    set :public_folder, 'lib/cms/public'
+    set :root, File.dirname(__FILE__) # Set root to the current directory
+    set :views, File.join(root, "views") # Tell Sinatra where to find views
+    set :public_folder, File.join(root, "public") # Tell Sinatra where to find public files
+  end
+
+  helpers do
+    def partial(template, options = {})
+      erb template.to_sym, options.merge!(:layout => false)
+    end
   end
 
   before do
@@ -34,47 +41,43 @@ class AdminRoutes < Sinatra::Base
   end
 
   get "/admin/collections/:slug" do |slug|
-    @setting = @collections.find { |c| c.slug == slug }
-    halt 404 if @setting.nil?
+    @collection = @collections.find { |c| c.slug == slug }
+    halt 404 if @collection.nil?
 
-    limit = 10
+    limit = Integer(params[:limit], exception: false) || 50
+    offset = (Integer(params[:page], exception: false) || 0) * limit
 
-    @entries = nested_select(
-      all_collections: @collections,
-      collection: @setting,
-      db: @db
+    @entries = @collection.nested_select(
+      limit: limit,
+      offset: offset,
     )
 
     erb :entry_details
   end
 
   get "/admin/collections/:slug/new" do |slug|
-    @setting = @collections.find { |c| c.slug == slug}
+    @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
     erb :new_entry
   end
 
   get "/admin/collections/:slug/:id/edit" do |slug, id|
-    @setting = @collections.find { |c| c.slug == slug }
-    halt 404 if @setting.nil?
+    @collection = @collections.find { |c| c.slug == slug }
+    halt 404 if @collection.nil?
 
-    @entry = nested_select(
-      all_collections: @collections,
-      collection: @setting,
-      id: id,
-      db: @db
-    ).first
+    @entry = @collection.nested_select(id: id).first
     halt 404 if @entry.nil?
 
     erb :edit_entry
   end
 
-  post "/admin/collections/:slug/:id/edit" do |slug, id|
-    # {"title"=>"Forrest Gump", "description"=>"", "tmdb_id"=>"13-forrest-gump", "slug"=>"movies", "id"=>"3"}
-    @setting = @collections.find { |c| c.slug == slug }
+  post "/admin/collections/:__slug/:__id/edit" do |__slug, __id|
+    @collection = @collections.find { |c| c.slug == __slug }
+    halt 404 if @collection.nil?
 
-    p params
-    redirect "/admin/collections/#{slug}/#{id}/edit"
+    @collection.update(data: params.except("__slug", "__id"), id: __id.to_i)
+
+    redirect "/admin/collections/#{__slug}/#{__id}/edit"
   end
 
   post "/admin/collections/:slug" do |slug|
@@ -91,7 +94,7 @@ class AdminRoutes < Sinatra::Base
           db: @db,
           tempfile: params[field.name][:tempfile],
           filename: params[field.name][:filename],
-          out_dir: "public/uploads/"
+          out_dir: "public/uploads/",
         )
 
         value = file_meta[:id]
@@ -105,8 +108,8 @@ class AdminRoutes < Sinatra::Base
     end
 
     exec_str = "INSERT INTO #{@setting.slug}
-    (#{@setting.fields.map { |f| f.name }.join(', ')})
-    VALUES (#{values.map { |_| "?" }.join(',')})"
+    (#{@setting.fields.map { |f| f.name }.join(", ")})
+    VALUES (#{values.map { |_| "?" }.join(",")})"
     puts exec_str
     p values
 

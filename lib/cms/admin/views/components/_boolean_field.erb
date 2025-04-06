@@ -1,0 +1,10 @@
+<div class="flex items-center gap-2">
+  <input
+    type="checkbox"
+    name="<%= field.name %>"
+    id="<%= field.name %>"
+    class="border border-black"
+    <%= @entry[field.name] ? "checked" : "" %>
+  >
+  <label for="<%= field.name %>"><%= field.name %></label>
+</div>

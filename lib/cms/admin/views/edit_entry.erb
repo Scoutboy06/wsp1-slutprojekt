@@ -1,11 +1,10 @@
-  
-<div
-  class="px-4 py-4"
-  x-data='formHandler'
->
+<div class="px-4 py-4" x-data='formHandler'>
   <a
     href="<%= request.path_info.split("/")[...-2].join("/") %>"
-    class="flex items-center gap-1 px-2 py-1 border border-black cursor-pointer w-min hover:bg-black hover:text-white"
+    class="
+      flex items-center gap-1 px-2 py-1 border border-black cursor-pointer w-min
+      hover:bg-black hover:text-white
+    "
   >
     <i class="icon">arrow_back</i>
     <span>Back</span>
@@ -13,105 +12,24 @@
 
   <form
     id="edit-form"
-    action="/admin/collections/<%= @setting.slug %>/<%= @entry["id"] %>/edit"
+    action="/admin/collections/<%= @collection.slug %>/<%= @entry["id"] %>/edit"
     enctype="multipart/form-data"
     method="POST"
     class="flex flex-col gap-8 mt-8"
   >
-    <% @setting.fields.each do |field| %>
-      <% if field.type == "string" %>
-        <div class="flex flex-col gap-2">
-          <label for="<%= field.name %>">
-            <%= field.name %>
-            <% if field.required %>
-              <span class="text-red-600">*</span>
-            <% end %>
-          </label>
-          <input
-            type="text"
-            name="<%= field.name %>"
-            id="<%= field.name %>"
-            class="px-2 py-1 border border-black"
-            value="<%= @entry[field.name] %>"
-            <%= field.required ? "required" : '' %>
-          >
-        </div>
-      <% elsif field.type == "boolean" %>
-        <div class="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="<%= field.name %>"
-            id="<%= field.name %>"
-            class="border border-black"
-            <%= @entry[field.name] ? "checked" : "" %>
-          >
-          <label for="<%= field.name %>"><%= field.name %></label>
-        </div>
-      <% elsif field.type == "email" %>
-        <div class="flex flex-col gap-2">
-          <label for="<%= field.name %>">
-            <%= field.name %>
-            <% if field.required %>
-              <span class="text-red-600">*</span>
-            <% end %>
-          </label>
-          <input
-            type="email"
-            name="<%= field.name %>"
-            id="<%= field.name %>"
-            class="px-2 py-1 border border-black"
-            <%= field.required ? "required" : "" %>
-          >
-        </div>
-      <% elsif field.type == "password" %>
-        <div class="flex flex-col gap-2">
-          <label for="<%= field.name %>">
-            <%= field.name %>
-            <% if field.required %>
-              <span class="text-red-600">*</span>
-            <% end %>
-          </label>
-          <input
-            type="password"
-            name="<%= field.name %>"
-            id="<%= field.name %>"
-            class="px-2 py-1 border border-black"
-            <%= field.required ? "required" : "" %>
-          >
-        </div>
-      <% elsif field.type == "upload" %>
-        <div class="flex flex-col gap-2">
-          <label for="<%= field.name %>">
-            <%= field.name %>
-            <% if field.required %>
-              <span class="text-red-600">*</span>
-            <% end %>
-          </label>
-          <div class="px-4 py-4 border border-black">
-            <input
-              type="file"
-              name="<%= field.name %>"
-              id="<%= field.name %>"
-              accept="image/*"
-              @change="handleFileUpload($event, '<%= field.name %>')"
-            >
-            <template x-if="filePreviews['<%= field.name %>']">
-              <div class="relative p-2 mt-2 border">
-                <img :src="filePreviews['<%= field.name %>'].preview" class="w-auto h-20">
-                <p x-text="filePreviews['<%= field.name %>'].name"></p>
-                <p x-text="filePreviews['<%= field.name %>'].size"></p>
-                <p x-text="filePreviews['<%= field.name %>'].dimensions"></p>
-                <button type="button" @click="removeFile('<%= field.name %>')" class="icon">delete</button>
-              </div>
-            </template>
-          </div>
-        </div>
-      <% end %>
+    <% @collection.fields.each do |field| %>
+      <%= partial "components/_form_field",
+      locals: {
+        field: field,
+        value: @entry[field.name],
+      } %>
     <% end %>
 
     <button
       type="submit"
-      class="py-2 border border-black cursor-pointer hover:bg-black hover:text-white"
+      class="
+        py-2 border border-black cursor-pointer hover:bg-black hover:text-white
+      "
     >Update</button>
   </form>
 </div>
@@ -119,8 +37,9 @@
 <script>
 document.addEventListener('alpine:init', () => {
   Alpine.data('formHandler', (initialPreviews) => ({
+    deletedFiles: new Set(),
     filePreviews: Object.assign({}, initialPreviews || {}, {<%=
-      @setting.fields
+      @collection.fields
         .select { |field| field.type == "upload" && !!@entry[field.name]['url'] }
         .map do |field|
           nested_field = @entry[field.name]
@@ -153,6 +72,7 @@ document.addEventListener('alpine:init', () => {
             dimensions: `${img.width} x ${img.height}`,
             preview: e.target.result,
           };
+          this.deletedFiles.add(fieldName);
         }
       }
 
@@ -161,6 +81,7 @@ document.addEventListener('alpine:init', () => {
 
     removeFile(fieldName) {
       delete this.filePreviews[fieldName];
+      this.deletedFiles.add(fieldName);
     },
   }))
 })

@@ -29,10 +29,8 @@ class ApiRoutes < Sinatra::Base
     offset = (Integer(params[:page], exception: false) || 0) * limit
 
     data = @collection.nested_select(
-      all_collections: @collections,
       limit: limit,
       offset: offset,
-      db: @db,
     )
     data.to_json
   end
@@ -41,7 +39,7 @@ class ApiRoutes < Sinatra::Base
     @collection = @collections.find { |c| c.slug == slug }
     halt 404 if @collection.nil?
 
-    data = @collection.select(db: @db, id: id).first
+    data = @collection.select(id: id).first
     data.to_json
   end
 
