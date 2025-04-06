@@ -37,7 +37,7 @@
 <script>
 document.addEventListener('alpine:init', () => {
   Alpine.data('formHandler', (initialPreviews) => ({
-    deletedFiles: new Set(),
+    modifiedFiles: new Set(),
     filePreviews: Object.assign({}, initialPreviews || {}, {<%=
       @collection.fields
         .select { |field| field.type == "upload" && !!@entry[field.name]['url'] }
@@ -72,7 +72,7 @@ document.addEventListener('alpine:init', () => {
             dimensions: `${img.width} x ${img.height}`,
             preview: e.target.result,
           };
-          this.deletedFiles.add(fieldName);
+          this.modifiedFiles.add(fieldName);
         }
       }
 
@@ -81,7 +81,7 @@ document.addEventListener('alpine:init', () => {
 
     removeFile(fieldName) {
       delete this.filePreviews[fieldName];
-      this.deletedFiles.add(fieldName);
+      this.modifiedFiles.add(fieldName);
     },
   }))
 })

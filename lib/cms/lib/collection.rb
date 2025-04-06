@@ -142,26 +142,14 @@ class Collection
 
   def update(id:, data:)
     puts "------------------------"
-    query_parts = []
-    values = []
 
-    query_parts << "BEGIN TRANSACTION;\n"
+    self.nested_update(data: data, id: id)
 
-    query, _values = self.get_update_query(data: data, id: id)
-    query_parts << query;
-    values.push(*_values)
-
-    query_parts << "\nCOMMIT;"
-    
-    exec_str = query_parts.join("\n")
-    puts exec_str
-    puts "----"
-    p values
     puts "------------------------"
-    @db.execute(exec_str, values)
   end
 
-  private def get_update_query(data:, id: nil)
+  private def nested_update(data:, id: nil)
+    p data
     query_parts = []
     values = []
 
@@ -178,9 +166,25 @@ class Collection
     query_parts << "WHERE id = ?" unless id.nil?
     values << id unless id.nil?
 
-    query_parts << ';'
+    exec_str = query_parts.join("\n")
 
-    return [query_parts.join("\n"), values]
+    puts "----"
+    puts exec_str
+    p values
+    puts "----"
+
+    @db.execute(exec_str, values)
+
+    all_collections = CMS::Config.collections
+    relation_fields_to_update = self.fields
+      .select { |field| !!field.relation_to && !!data.key?(field.name + '__updated')}
+    collections_to_update = relation_fields_to_update.map do |field|
+      all_collections.find { |col| col.slug == field.relation_to }
+    end
+    # p relation_fields_to_update
+    # p collections_to_update
+
+    collections_to_update.each { |col| col.nested_update(data: data.fetch(col.slug)) }
   end
 
   def delete(id:)
