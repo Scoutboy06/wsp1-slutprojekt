@@ -122,7 +122,7 @@ class Collection
     data
   end
 
-  def insert(data:)
+  def insert(data)
     field_names = self.fields.map { |field| field.name }
     field_values = self.fields.map do |field|
       value = data.fetch(field.name, nil)
@@ -140,54 +140,151 @@ class Collection
     @db.execute(exec_str, field_values)
   end
 
-  def update(id:, data:)
+  def update(data:, id: nil)
     puts "------------------------"
-
-    self.nested_update(data: data, id: id)
-
-    puts "------------------------"
-  end
-
-  private def nested_update(data:, id: nil)
     p data
     query_parts = []
     values = []
 
-    # UPDATE part
+    # Construct the UPDATE statement
     query_parts << "UPDATE #{self.slug}"
 
-    # SET part
-    self_owned_fields = self.fields.select { |field| !field.relation_to }
-    set_values = self_owned_fields.map { |field| [field.name, data.fetch(field.name, nil)] }
-    query_parts << "SET #{set_values.map { |v| "#{v[0]} = ?" }.join(', ')}"
-    values.push(*set_values.map { |v| v[1] })
+    # Handle the SET clause for owned fields
+    owned_fields = self.fields.select { |field| !field.relation_to }
+    set_clauses = owned_fields.map do |field|
+      value = data.fetch(field.name, nil)
+      values << value
+      "#{field.name} = ?"
+    end
+    query_parts << "SET #{set_clauses.join(', ')}" if set_clauses.any?
 
-    # WHERE part
-    query_parts << "WHERE id = ?" unless id.nil?
-    values << id unless id.nil?
+    # Handle the WHERE clause for updating a specific record
+    unless id.nil?
+      query_parts << "WHERE id = ?"
+      values << id
+    end
 
     exec_str = query_parts.join("\n")
 
-    puts "----"
+    puts "\n---- SQL to execute ----"
     puts exec_str
+    puts "---- Values ----"
     p values
-    puts "----"
 
     @db.execute(exec_str, values)
 
-    all_collections = CMS::Config.collections
-    relation_fields_to_update = self.fields
-      .select { |field| !!field.relation_to && !!data.key?(field.name + '__updated')}
-    collections_to_update = relation_fields_to_update.map do |field|
-      all_collections.find { |col| col.slug == field.relation_to }
-    end
-    # p relation_fields_to_update
-    # p collections_to_update
+    # Handle updates for related collections
+    CMS::Config.collections.each do |collection|
+      relation_fields = fields.select { |f| f.relation_to == collection.slug }
+      relation_fields.each do |field|
+        updated_key = "#{field.name}__updated"
+        next unless data.key?(updated_key)
 
-    collections_to_update.each { |col| col.nested_update(data: data.fetch(col.slug)) }
+        related_data = data.fetch(field.name, nil)
+        if related_data.nil?
+          collection.delete_by_id_expr(
+            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = ?",
+            values: [id],
+          )
+        else
+          collection.update_by_id_expr(
+            data: related_data,
+            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = ?",
+            values: [id]
+          )
+        end
+      end
+    end
+    puts "------------------------"
+  end
+
+  def update_by_id_expr(data:, id_expr:, values:)
+    puts "------------------------"
+    p data
+
+    if self.slug == 'media'
+      Media.delete_by_id_expr(
+        db: @db,
+        id_expr: id_expr,
+        values: values,
+      )
+      return
+    end
+
+    query_parts = []
+    vals = []
+
+    # Construct the UPDATE statement
+    query_parts << "UPDATE #{self.slug}"
+
+    # Handle the SET clause for owned fields
+    owned_fields = self.fields.select { |field| !field.relation_to }
+    set_clauses = owned_fields.map do |field|
+      value = data.fetch(field.name, nil)
+      vals << value
+      "#{field.name} = ?"
+    end
+    query_parts << "SET #{set_clauses.join(', ')}" if set_clauses.any?
+
+    # Handle the WHERE clause for updating a specific record
+    query_parts << "WHERE id = (#{id_expr})"
+    vals.push(*values)
+
+    exec_str = query_parts.join("\n")
+
+    puts "\n---- SQL to execute ----"
+    puts exec_str
+    puts "---- Values ----"
+    p vals
+
+    @db.execute(exec_str, vals)
+
+    # Handle updates for related collections
+    CMS::Config.collections.each do |collection|
+      relation_fields = fields.select { |f| f.relation_to == collection.slug }
+      relation_fields.each do |field|
+        updated_key = "#{field.name}__updated"
+        next unless data.key?(updated_key)
+
+        related_data = data.fetch(field.name, nil)
+        if related_data.nil?
+          collection.delete_by_id_expr(
+            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = #{id_expr}",
+            values: [id],
+          )
+        else
+          collection.update_by_id_expr(
+            data: related_data,
+            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = (#{id_expr})",
+            values: [id]
+          )
+        end
+      end
+    end
+    puts "------------------------"
   end
 
   def delete(id:)
-    @db.execute("DELETE FROM #{self.slug} WHERE id = ?", [id])
+    exec_str = "DELETE FROM #{self.slug} WHERE id = ?"
+
+    puts "\n---- SQL to execute ----"
+    puts exec_str
+    puts "---- Values ----"
+    p [id]
+    puts "--------------------------"
+
+    @db.execute(exec_str, [id])
+  end
+
+  def delete_by_id_expr(id_expr:, values:)
+    exec_str = "DELETE FROM #{self.slug} WHERE id = (#{id_expr})"
+
+    puts "\n---- SQL to execute ----"
+    puts exec_str
+    puts "---- Values ----"
+    p values
+    puts "------------------------"
+
+    @db.execute(exec_str, values)
   end
 end

@@ -25,7 +25,7 @@ class Media
     db.execute(
       "INSERT INTO media (file_path, url, file_name, mime_type, width, height, alt)
       VALUES (?,?,?,?,?,?,?)",
-      ["temp", "temp", filename, mime_type, width, height, nil] 
+      ["temp", "temp", filename, mime_type, width, height, nil]
     )
 
     # 2. Get the last inserted ID
@@ -70,5 +70,23 @@ class Media
         { name: "alt", type: "string" },
       ]
     })
+  end
+
+  def self.delete(db:, id:)
+    puts "\n---- SQL to execute ----"
+    puts "DELETE FROM media WHERE id = ?"
+    puts "---- Values ----"
+    p [id]
+
+    db.execute("DELETE FROM media WHERE id = ?", [id])
+  end
+
+  def self.delete_by_id_expr(db:, id_expr:, values:)
+    puts "\n---- SQL to execute ----"
+    puts "DELETE FROM media WHERE id = (#{id_expr})"
+    puts "---- Values ----"
+    p [id]
+
+    db.execute("DELETE FROM media WHERE id = (#{id_expr})", values)
   end
 end

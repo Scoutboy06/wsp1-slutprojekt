@@ -48,7 +48,7 @@ class ApiRoutes < Sinatra::Base
     halt 404 if @collection.nil?
 
     data = JSON.parse(request.body.read)
-    @collection.insert(db: @db, data: data)
+    @collection.insert(data)
 
     status 201
     @db.last_insert_row_id.to_json

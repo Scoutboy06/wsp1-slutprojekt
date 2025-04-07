@@ -39,7 +39,7 @@ class Seeder
       file_path = File.join(seeder_media_dir, filename)
 
       raise "File not found: #{filename}" unless File.exist?(file_path)
-      
+
       Media.upload(
         db: db,
         tempfile: File.open(file_path),
@@ -48,30 +48,24 @@ class Seeder
       )
     end
 
-    movies_collection = CMS::Config.collections.find { |col| col.slug == "movies" }    
+    movies_collection = CMS::Config.collections.find { |col| col.slug == "movies" }
 
     # Forrest gump
-    movies_collection.insert(
-      db: db,
-      data: {
-        "title" => "Forrest Gump",
-        "description" => "Lorem ipsum",
-        "tmdb_id" => "13-forrest-gump",
-        "poster" => file_meta[1][:id],
-        "backdrop" => file_meta[0][:id],
-      }
-    )
+    movies_collection.insert({
+      "title" => "Forrest Gump",
+      "description" => "Lorem ipsum",
+      "tmdb_id" => "13-forrest-gump",
+      "poster" => file_meta[1][:id],
+      "backdrop" => file_meta[0][:id],
+    })
 
     # Spirited away
-    movies_collection.insert(
-      db: db,
-      data: {
-        "title" => "Spirited Away",
-        "description" => "Lorem ipsum",
-        "tmdb_id" => "129",
-        "poster" => file_meta[3][:id],
-        "backdrop" => file_meta[2][:id],
-      }
-    )
+    movies_collection.insert({
+      "title" => "Spirited Away",
+      "description" => "Lorem ipsum",
+      "tmdb_id" => "129",
+      "poster" => file_meta[3][:id],
+      "backdrop" => file_meta[2][:id],
+    })
   end
 end
