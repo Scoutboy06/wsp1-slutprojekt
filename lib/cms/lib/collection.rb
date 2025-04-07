@@ -1,8 +1,10 @@
 require_relative "./field"
 require_relative "./upload_config"
+require_relative "./db_helpers"
 require_relative '../lib'
 
 class Collection
+  include DatabaseOperations
   attr_reader :name, :slug, :upload, :admin_thumbnail, :mime_types, :fields
 
   def initialize(name:, slug:, upload: nil, admin_thumbnail: nil, mime_types: nil, fields: [])
@@ -38,16 +40,7 @@ class Collection
   end
 
   def select(id: nil, limit: nil, offset: nil)
-    exec_str = "SELECT * FROM #{self.slug}"
-    exec_str << " WHERE id = ?" unless id.nil?
-    exec_str << " LIMIT ?" unless limit.nil?
-    exec_str << " OFFSET ?" unless offset.nil?
-
-    values = []
-    values << id unless id.nil?
-    values << limit unless limit.nil?
-    values << offset unless offset.nil?
-
+    exec_str, values = build_select_query(slug, id: id, limit: limit, offset: offset)
     @db.execute(exec_str, values)
   end
 
@@ -57,22 +50,15 @@ class Collection
     query_values = []
 
     ### start SELECT ###
-    select_parts = []
-    select_parts << "#{self.slug}.*"
+    select_parts = ["#{self.slug}.*"]
+    fields_with_relations = self.fields.select(&:relation_to)
 
-    fields_with_relations = self.fields
-      .select { |field| !!field.relation_to }
-
-    for field in fields_with_relations
-      # field = { name: "poster", type: "upload", relation_to: "media" }
-
+    fields_with_relations.each do |field|
       field_collection = all_collections.find { |c| c.slug == field.relation_to }
-
-      for col_field in field_collection.fields
+      field_collection.fields.each do |col_field|
         select_parts << "#{field.name}_#{field.relation_to}.#{col_field.name} AS __#{field.name}_#{field.relation_to}_#{col_field.name}"
       end
     end
-
     query_parts << "SELECT #{select_parts.join(', ')}"
     ### end SELECT ###
 
@@ -81,13 +67,9 @@ class Collection
     ### end FROM ###
 
     ### start LEFT JOIN ###
-    left_join_parts = []
-
-    for field in fields_with_relations
-      # media ON movies.poster = media.id
-      left_join_parts << "LEFT JOIN #{field.relation_to} AS #{field.name}_#{field.relation_to} ON #{self.slug}.#{field.name} = #{field.name}_#{field.relation_to}.id"
+    left_join_parts = fields_with_relations.map do |field|
+      "LEFT JOIN #{field.relation_to} AS #{field.name}_#{field.relation_to} ON #{self.slug}.#{field.name} = #{field.name}_#{field.relation_to}.id"
     end
-
     query_parts << left_join_parts.join("\n  ")
     ### end LEFT JOIN ###
 
@@ -99,16 +81,14 @@ class Collection
     ### end WHERE ###
 
     query_str = query_parts.join("\n  ")
+    data = execute_sql(query_str, query_values)
 
-    data = @db.execute(query_str, query_values)
-
-    for result_item in data
-      for field in fields_with_relations
+    data.each do |result_item|
+      fields_with_relations.each do |field|
         field_hash = {}
-
         field_collection = all_collections.find { |c| c.slug == field.relation_to }
 
-        for col_field in field_collection.fields
+        field_collection.fields.each do |col_field|
           query_name = "__#{field.name}_#{field.relation_to}_#{col_field.name}"
           query_value = result_item[query_name]
           field_hash[col_field.name] = query_value
@@ -123,86 +103,12 @@ class Collection
   end
 
   def insert(data)
-    field_names = self.fields.map { |field| field.name }
-    field_values = self.fields.map do |field|
-      value = data.fetch(field.name, nil)
-      value = 1 if value == true
-      value = 0 if value == false
-      value = BCrypt::Password.create(value) if field.type == "password"
-      value
-    end
-
-    exec_str = "INSERT INTO #{self.slug}
-      (#{field_names.join(', ')})
-      VALUES (#{field_names.map { |_| '?' }.join(',')})
-    "
-
-    @db.execute(exec_str, field_values)
+    exec_str, values = build_insert_query(slug, fields, data)
+    execute_sql(exec_str, values)
   end
 
   def update(data:, id: nil)
-    puts "------------------------"
-    p data
-    query_parts = []
-    values = []
-
-    # Construct the UPDATE statement
-    query_parts << "UPDATE #{self.slug}"
-
-    # Handle the SET clause for owned fields
-    owned_fields = self.fields.select { |field| !field.relation_to }
-    set_clauses = owned_fields.map do |field|
-      value = data.fetch(field.name, nil)
-      values << value
-      "#{field.name} = ?"
-    end
-    query_parts << "SET #{set_clauses.join(', ')}" if set_clauses.any?
-
-    # Handle the WHERE clause for updating a specific record
-    unless id.nil?
-      query_parts << "WHERE id = ?"
-      values << id
-    end
-
-    exec_str = query_parts.join("\n")
-
-    puts "\n---- SQL to execute ----"
-    puts exec_str
-    puts "---- Values ----"
-    p values
-
-    @db.execute(exec_str, values)
-
-    # Handle updates for related collections
-    CMS::Config.collections.each do |collection|
-      relation_fields = fields.select { |f| f.relation_to == collection.slug }
-      relation_fields.each do |field|
-        updated_key = "#{field.name}__updated"
-        next unless data.key?(updated_key)
-
-        related_data = data.fetch(field.name, nil)
-        if related_data.nil?
-          collection.delete_by_id_expr(
-            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = ?",
-            values: [id],
-          )
-        else
-          collection.update_by_id_expr(
-            data: related_data,
-            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = ?",
-            values: [id]
-          )
-        end
-      end
-    end
-    puts "------------------------"
-  end
-
-  def update_by_id_expr(data:, id_expr:, values:)
-    puts "------------------------"
-    p data
-
-    if self.slug == 'media'
+    if slug == 'media'
       Media.delete_by_id_expr(
         db: @db,
         id_expr: id_expr,
@@ -214,59 +120,49 @@ class Collection
         filename: data['filename'],
         out_dir: "public/uploads/",
       )
-      return
+      return media_meta[:id]
     end
 
-    query_parts = []
-    vals = []
-
-    # Construct the UPDATE statement
-    query_parts << "UPDATE #{self.slug}"
+    query_parts = ["UPDATE #{self.slug} SET"]
+    values = []
 
     # Handle the SET clause for owned fields
-    owned_fields = self.fields.select { |field| !field.relation_to }
-    set_clauses = owned_fields.map do |field|
-      value = data.fetch(field.name, nil)
-      vals << value
-      "#{field.name} = ?"
-    end
-    query_parts << "SET #{set_clauses.join(', ')}" if set_clauses.any?
+    set_clauses = fields
+      .reject(&:relation_to)
+      .map { |field| "#{field.name} = ?"}
+    query_parts << set_clauses.join(', ') if set_clauses.any?
 
     # Handle the WHERE clause for updating a specific record
-    query_parts << "WHERE id = (#{id_expr})"
-    vals.push(*values)
-
-    exec_str = query_parts.join("\n")
-
-    puts "\n---- SQL to execute ----"
-    puts exec_str
-    puts "---- Values ----"
-    p vals
-
-    @db.execute(exec_str, vals)
-
-    # Handle updates for related collections
-    CMS::Config.collections.each do |collection|
-      relation_fields = fields.select { |f| f.relation_to == collection.slug }
-      relation_fields.each do |field|
-        updated_key = "#{field.name}__updated"
-        next unless data.key?(updated_key)
-
-        related_data = data.fetch(field.name, nil)
-        if related_data.nil?
-          collection.delete_by_id_expr(
-            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = #{id_expr}",
-            values: [id],
-          )
-        else
-          collection.update_by_id_expr(
-            data: related_data,
-            id_expr: "SELECT #{field.name} FROM #{self.slug} WHERE id = (#{id_expr})",
-            values: [id]
-          )
-        end
-      end
+    unless id.nil?
+      query_parts << "WHERE id = ?"
+      values << id
     end
+
+    execute_sql(query_parts.join("\n"), values)
+
+    handle_related_collection_updates(data, id)
+  end
+
+  def update_by_id_expr(data:, id_expr:, values:)
+    if slug == 'media'
+      Media.delete_by_id_expr(
+        db: @db,
+        id_expr: id_expr,
+        values: values,
+      )
+      media_meta = Media.upload(
+        db: @db,
+        tempfile: data['tempfile'],
+        filename: data['filename'],
+        out_dir: "public/uploads/",
+      )
+      return media_meta[:id]
+    end
+
+    exec_str, vals = build_update_query(slug, fields, data, id_expr: id_expr, values: values)
+    execute_sql(exec_str, vals, debug: true)
+
+    handle_related_collection_updates(data, values.first)
     puts "------------------------"
   end
 
@@ -275,9 +171,7 @@ class Collection
       Media.delete(db: @db, id: id)
       return
     end
-
-    exec_str = "DELETE FROM #{self.slug} WHERE id = ?"
-    @db.execute(exec_str, [id])
+    execute_sql("DELETE FROM #{slug} WHERE id = ?", [id])
   end
 
   def delete_by_id_expr(id_expr:, values:)
@@ -285,8 +179,39 @@ class Collection
       Media.delete_by_id_expr(db: @db, id_expr: id_expr, values: values)
       return
     end
+    execute_sql(build_delete_query(slug, id_expr: id_expr), values)
+  end
 
-    exec_str = "DELETE FROM #{self.slug} WHERE id = (#{id_expr})"
-    @db.execute(exec_str, values)
+  private def handle_related_collection_updates(data, parent_id)
+    CMS::Config.collections.each do |collection|
+      relation_fields = fields.select { |f| f.relation_to == collection.slug }
+      relation_fields.each do |field|
+        updated_key = "#{field.name}__updated"
+        next unless data.key?(updated_key)
+
+        related_data = data.fetch(field.name, nil)
+        if related_data.is_a?(Hash) && related_data.key?('tempfile') && related_data.key?('filename')
+          o
+          media_id = collection.update_by_id_expr(data: related_data, id_expr: 'NULL', values: [])
+          update_parent_with_relation(parent_id, field.name, media_id) if media_id
+        elsif related_data.nil?
+          collection.delete_by_id_expr(
+            id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
+            values: [parent_id],
+          )
+        else
+          collection.update_by_id_expr(
+            data: related_data,
+            id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
+            values: [parent_id],
+          )
+        end
+      end
+    end
+  end
+
+  private def update_parent_with_relation(parent_id, relation_field_name, related_id)
+    exec_str = "UPDATE #{slug} SET #{relation_field_name} = ? WHERE id = ?"
+    execute_sql(exec_str, [related_id, parent_id], debug: true)
   end
 end
