@@ -208,6 +208,12 @@ class Collection
         id_expr: id_expr,
         values: values,
       )
+      media_meta = Media.upload(
+        db: @db,
+        tempfile: data['tempfile'],
+        filename: data['filename'],
+        out_dir: "public/uploads/",
+      )
       return
     end
 
@@ -265,26 +271,22 @@ class Collection
   end
 
   def delete(id:)
+    if self.slug == 'media'
+      Media.delete(db: @db, id: id)
+      return
+    end
+
     exec_str = "DELETE FROM #{self.slug} WHERE id = ?"
-
-    puts "\n---- SQL to execute ----"
-    puts exec_str
-    puts "---- Values ----"
-    p [id]
-    puts "--------------------------"
-
     @db.execute(exec_str, [id])
   end
 
   def delete_by_id_expr(id_expr:, values:)
+    if self.slug == 'media'
+      Media.delete_by_id_expr(db: @db, id_expr: id_expr, values: values)
+      return
+    end
+
     exec_str = "DELETE FROM #{self.slug} WHERE id = (#{id_expr})"
-
-    puts "\n---- SQL to execute ----"
-    puts exec_str
-    puts "---- Values ----"
-    p values
-    puts "------------------------"
-
     @db.execute(exec_str, values)
   end
 end

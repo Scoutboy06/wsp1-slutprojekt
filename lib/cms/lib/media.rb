@@ -33,14 +33,6 @@ class Media
     disk_filename = "#{id}-#{filename}"
     disk_file_path = File.join(out_dir, disk_filename)
     url = '/' + disk_file_path.sub('public/', '')
-    # puts "---------"
-    # p filename
-    # p out_dir
-    # puts "--"
-    # p disk_filename
-    # p disk_file_path
-    # p url
-    # puts "---------"
 
     # 3. Move the uploaded file to the new location
     FileUtils.cp(tempfile.path, disk_file_path)
@@ -73,20 +65,24 @@ class Media
   end
 
   def self.delete(db:, id:)
-    puts "\n---- SQL to execute ----"
-    puts "DELETE FROM media WHERE id = ?"
-    puts "---- Values ----"
-    p [id]
+    media_data = db.execute("SELECT file_path FROM media WHERE id = ?", [id]).first
+    return if media_data.nil?
 
-    db.execute("DELETE FROM media WHERE id = ?", [id])
+    file_path = media_data['file_path']
+
+    db.execute("DELETE FROM media WHERE id = (#{id_expr})", values)
+
+    File.delete(file_path) if File.exist?(file_path)
   end
 
   def self.delete_by_id_expr(db:, id_expr:, values:)
-    puts "\n---- SQL to execute ----"
-    puts "DELETE FROM media WHERE id = (#{id_expr})"
-    puts "---- Values ----"
-    p [id]
+    media_data = db.execute("SELECT file_path FROM media WHERE id = (#{id_expr})", values).first
+    return if media_data.nil?
+
+    file_path = media_data['file_path']
 
     db.execute("DELETE FROM media WHERE id = (#{id_expr})", values)
+
+    File.delete(file_path) if File.exist?(file_path)
   end
 end
