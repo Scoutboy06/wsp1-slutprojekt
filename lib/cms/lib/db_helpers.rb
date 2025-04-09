@@ -3,14 +3,16 @@ require_relative './upload_config'
 require_relative '../lib'
 
 module DatabaseOperations
-  def execute_sql(sql, values = [], debug: false)
+  def execute_sql(sql, values = [], debug: false, db: nil)
+    db = (db || @db)
+    throw "Database not provided" if db.nil?
     if debug
       puts "\n---- SQL to execute ----"
       puts sql
       puts "---- Values ----"
       p values
     end
-    @db.execute(sql, values)
+    db.execute(sql, values)
   end
 
   def build_select_query(slug, id: nil, limit: nil, offset: nil)
@@ -23,7 +25,7 @@ module DatabaseOperations
 
   def build_insert_query(slug, fields, data)
     field_names = fields.map(&:name)
-    field_values = field.map do |field|
+    field_values = fields.map do |field|
       value = data.fetch(field.name, nil)
       case field.type
       when "boolean"

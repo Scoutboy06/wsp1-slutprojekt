@@ -109,28 +109,26 @@ class Collection
 
   def update(data:, id: nil)
     if slug == 'media'
-      Media.delete_by_id_expr(
-        db: @db,
-        id_expr: id_expr,
-        values: values,
-      )
-      media_meta = Media.upload(
+      Media.replace(
         db: @db,
         tempfile: data['tempfile'],
         filename: data['filename'],
         out_dir: "public/uploads/",
       )
-      return media_meta[:id]
+      return
     end
 
     query_parts = ["UPDATE #{self.slug} SET"]
-    values = []
 
     # Handle the SET clause for owned fields
     set_clauses = fields
       .reject(&:relation_to)
       .map { |field| "#{field.name} = ?"}
     query_parts << set_clauses.join(', ') if set_clauses.any?
+
+    values = fields
+      .reject(&:relation_to)
+      .map { |field| data.fetch(field.name, nil) }
 
     # Handle the WHERE clause for updating a specific record
     unless id.nil?
@@ -145,22 +143,19 @@ class Collection
 
   def update_by_id_expr(data:, id_expr:, values:)
     if slug == 'media'
-      Media.delete_by_id_expr(
+      Media.replace_by_id_expr(
         db: @db,
         id_expr: id_expr,
         values: values,
-      )
-      media_meta = Media.upload(
-        db: @db,
         tempfile: data['tempfile'],
         filename: data['filename'],
-        out_dir: "public/uploads/",
+        out_dir: 'public/uploads/',
       )
-      return media_meta[:id]
+      return
     end
 
     exec_str, vals = build_update_query(slug, fields, data, id_expr: id_expr, values: values)
-    execute_sql(exec_str, vals, debug: true)
+    execute_sql(exec_str, vals)
 
     handle_related_collection_updates(data, values.first)
     puts "------------------------"
@@ -191,9 +186,11 @@ class Collection
 
         related_data = data.fetch(field.name, nil)
         if related_data.is_a?(Hash) && related_data.key?('tempfile') && related_data.key?('filename')
-          o
-          media_id = collection.update_by_id_expr(data: related_data, id_expr: 'NULL', values: [])
-          update_parent_with_relation(parent_id, field.name, media_id) if media_id
+          media_id = collection.update_by_id_expr(
+            data: related_data,
+            id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
+            values: [parent_id],
+          )
         elsif related_data.nil?
           collection.delete_by_id_expr(
             id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
@@ -212,6 +209,6 @@ class Collection
 
   private def update_parent_with_relation(parent_id, relation_field_name, related_id)
     exec_str = "UPDATE #{slug} SET #{relation_field_name} = ? WHERE id = ?"
-    execute_sql(exec_str, [related_id, parent_id], debug: true)
+    execute_sql(exec_str, [related_id, parent_id])
   end
 end
