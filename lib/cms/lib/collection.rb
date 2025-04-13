@@ -40,12 +40,10 @@ class Collection
   end
 
   def setup_db(db)
-    field_strs = @fields.map { |f| f.get_sql_column_string }
+    field_strs = ["id INTEGER PRIMARY KEY AUTOINCREMENT"]
+    field_strs.push(*@fields.map { |f| f.get_sql_column_string })
 
-    exec_str = "CREATE TABLE IF NOT EXISTS #{@slug} (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      #{field_strs.join(",\n")}
-    );"
+    exec_str = "CREATE TABLE IF NOT EXISTS #{@slug} (\n#{field_strs.join(",\n")}\n);"
 
     db.execute(exec_str)
     @db = db
@@ -120,10 +118,64 @@ class Collection
   end
 
   def update(id:, data:, id_expr: '?')
-    exec_str, values = build_update_query(slug, fields, data, id: id, id_expr: id_expr)
-    execute_sql(exec_str, values, debug: true)
+    query_parts = ["UPDATE #{slug} SET"]
 
-    handle_related_collection_updates(data, id)
+    set_clauses = fields
+      .reject { |f| f.relation_to || f.type == "password" }
+      .map { |field| "#{field.name} = ?" }
+    values = fields
+      .reject { |f| f.relation_to || f.type == "password" }
+      .map do |field|
+        value = data.fetch(field.name, nil)
+        value = value == true || value == "on" ? 1 : 0 if field.type == "password"
+        value
+      end
+
+    password_fields_to_update = fields.select do |f|
+      f.type == "password" && data.key?(f.name) && data.fetch(f.name) != ""
+    end
+
+    password_fields_to_update.each do |field|
+      set_clauses << "#{field.name} = ?"
+      values << BCrypt::Password.create(data.fetch(field.name))
+    end
+
+    fields_with_relations = fields.select { |f| f.relation_to }
+    fields_with_relations.each do |field|
+      value = data.fetch(field.name, nil)
+      is_deleted = data.key?(field.name + '__deleted')
+      relation_col = CMS::Config.collections.find { |c| c.slug == field.relation_to }
+
+      # 4 possible cases:
+      # !value && !is_deleted => Do nothing
+      # !value && is_deleted => Delete
+      # value && !is_deleted => Create
+      # value && is_deleted => Update
+
+      if !value && is_deleted
+        relation_col.delete(
+          id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
+          id: id
+        )
+      elsif value && !is_deleted
+        relation_col.insert(value)
+        set_clauses << "#{field.name} = ?"
+        values << @db.last_insert_row_id
+      elsif value && is_deleted
+        relation_col.update(
+          id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
+          id: id,
+          data: value
+        )
+      end
+    end
+
+    query_parts << set_clauses.join(', ') if set_clauses.any?
+    query_parts << "WHERE id = (#{id_expr})"
+    values.push(id)
+    
+    exec_str = query_parts.join("\n")
+    execute_sql(exec_str, values, debug: true)
   end
 
   def delete(id:, id_expr: '?')

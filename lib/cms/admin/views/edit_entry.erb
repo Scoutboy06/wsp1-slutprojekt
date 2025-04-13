@@ -1,7 +1,10 @@
 <div class="px-4 py-4" x-data='formHandler'>
   <a
     href="<%= request.path_info.split("/")[...-2].join("/") %>"
-    class="flex items-center gap-1 px-2 py-1 border border-black cursor-pointer w-min hover:bg-black hover:text-white"
+    class="
+      flex items-center gap-1 px-2 py-1 border border-black cursor-pointer w-min
+      hover:bg-black hover:text-white
+    "
   >
     <i class="icon">arrow_back</i>
     <span>Back</span>
@@ -19,37 +22,41 @@
       locals: {
         field: field,
         value: @entry[field.name],
-        mode: :edit
+        mode: :edit,
       } %>
     <% end %>
 
     <button
       type="submit"
-      class="py-2 border border-black cursor-pointer hover:bg-black hover:text-white"
+      class="
+        py-2 border border-black cursor-pointer hover:bg-black hover:text-white
+      "
     >Update</button>
   </form>
 </div>
 
 <script>
 document.addEventListener('alpine:init', () => {
-  Alpine.data('formHandler', (initialPreviews) => ({
-    replacedFiles: new Set(),
-    filePreviews: Object.assign({}, initialPreviews || {}, {<%=
-      @collection.fields
-        .select { |field| field.type == "upload" && !!@entry[field.name]['url'] }
-        .map do |field|
-          nested_field = @entry[field.name]
-          "\"#{field.name}\":" + {
-            name: nested_field["file_name"],
-            size: nil,
-            dimensions: nested_field["width"] && nested_field["height"] ?
-              "#{nested_field["width"]} x #{nested_field["height"]}":
-              nil,
-            preview: nested_field["url"],
-          }.to_json
-        end
-        .join(", ")
-    %>}),
+  const initialPreviews = {<%=
+    @collection.fields
+      .select { |field| field.type == "upload" && !!@entry[field.name]['url'] }
+      .map do |field|
+        nested_field = @entry[field.name]
+        "\"#{field.name}\":" + {
+          name: nested_field["file_name"],
+          size: nil,
+          dimensions: nested_field["width"] && nested_field["height"] ?
+            "#{nested_field["width"]} x #{nested_field["height"]}":
+            nil,
+          preview: nested_field["url"],
+        }.to_json
+      end
+      .join(", ")
+  %>};
+
+  Alpine.data('formHandler', () => ({
+    deletedFiles: new Set(),
+    filePreviews: Object.assign({}, initialPreviews),
 
     handleFileUpload(e, fieldName) {
       const file = e.target.files[0];
@@ -62,8 +69,8 @@ document.addEventListener('alpine:init', () => {
         img.src = e.target.result;
 
         img.onload = () => {
-          if(this.filePreviews[fieldName]) {
-            this.replacedFiles.add(fieldName);
+          if (initialPreviews[fieldName]) {
+            this.deletedFiles.add(fieldName);
           }
 
           this.filePreviews[fieldName] = {
@@ -72,7 +79,6 @@ document.addEventListener('alpine:init', () => {
             dimensions: `${img.width} x ${img.height}`,
             preview: e.target.result,
           };
-
         }
       }
 
@@ -81,7 +87,9 @@ document.addEventListener('alpine:init', () => {
 
     removeFile(fieldName) {
       delete this.filePreviews[fieldName];
-      this.replacedFiles.add(fieldName);
+      if (initialPreviews[fieldName]) {
+        this.deletedFiles.add(fieldName);        
+      }
     },
   }))
 })

@@ -36,7 +36,7 @@ module DatabaseOperations
       else
         case field.type
         when "boolean"
-          value == true ? 1 : 0
+          value == true || value == "on" ? 1 : 0
         when "password"
           BCrypt::Password.create(value) if value
         else
@@ -58,7 +58,7 @@ module DatabaseOperations
       .reject { |f| f.relation_to || f.type == "password" }
       .map do |field|
         value = data.fetch(field.name, nil)
-        value = value == "on" ? 1 : 0 if field.type == "password"
+        value = value == true || value == "on" ? 1 : 0 if field.type == "password"
         value
       end
 
