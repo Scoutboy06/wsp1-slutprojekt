@@ -18,6 +18,10 @@ module CMS
     Media.build_config(**kwargs)
   end
 
+  def self.collection(slug)
+    @collections.find { |col| col.slug == slug }
+  end
+
   module Config
     CONFIG_FILE = File.expand_path("../../cms_config.rb", __dir__)
 

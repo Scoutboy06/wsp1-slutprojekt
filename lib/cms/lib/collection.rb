@@ -51,7 +51,21 @@ class Collection
 
   def select(id: nil, limit: nil, offset: nil)
     exec_str, values = build_select_query(slug, id: id, limit: limit, offset: offset)
-    @db.execute(exec_str, values)
+    execute_sql(exec_str, values)
+  end
+
+  def select_by(limit: nil, offset: nil, **args)
+    conditions = args.map { |key, value| "#{key} = ?" }.join(' AND ')
+    values = args.values
+
+    sql = "SELECT * FROM #{slug}"
+    sql += " WHERE #{conditions}" unless conditions.empty?
+    sql += " LIMIT ?" if limit
+    sql += " OFFSET ?" if offset
+
+    values += [limit, offset].compact
+    
+    execute_sql(sql, values)
   end
 
   def nested_select(id: nil, limit: nil, offset: nil)

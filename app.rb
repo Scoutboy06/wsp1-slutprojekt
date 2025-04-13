@@ -12,7 +12,7 @@ class App < Sinatra::Base
 
   helpers do
     def protected!
-      redirect "/login" unless @is_signed_in
+      redirect "/login" unless authorized?
     end
 
     def authorized?
@@ -28,18 +28,23 @@ class App < Sinatra::Base
     "Hello world!"
   end
 
+  get "/protected" do
+    protected!
+    erb "This is protected data!!"
+  end
+
   get "/login" do
     erb :login
   end
 
   post "/login" do
-    puts "User id: #{session[:user_id]}"
-    Auth.sign_in(
+    success = Auth.sign_in(
       session,
       username: params[:username],
       password: params[:password],
     )
-    redirect "/"
+    redirect "/?success=true" if success
+    redirect "/login?error=invalidCredentials"
   end
 
   post "/logout" do
