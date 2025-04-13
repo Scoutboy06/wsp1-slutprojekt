@@ -3,7 +3,6 @@ require 'fileutils'
 require 'pathname'
 require 'tempfile'
 require_relative '../lib/cms/lib'
-require_relative '../lib/cms/lib/media'
 
 class Seeder
   def self.seed!
@@ -21,51 +20,44 @@ class Seeder
     end
 
     CMS::Config.load
+    movies = CMS::Config.collections.find { |col| col.slug == "movies" }
+    media = CMS::Config.collections.find { |col| col.slug == "media" }
+    users = CMS::Config.collections.find { |col| col.slug == "users" }
+    raise "Movies collection not found" if movies.nil?
+    raise "Media collection not found" if media.nil?
+    raise "Users collection not found" if users.nil?
 
-    # Upload media in /db/seeder_media
-    media_files = [
-      'forrest_gump_backdrop.jpg',
-      'forrest_gump_poster.jpg',
-      'spirited_away_backdrop.jpg',
-      'spirited_away_poster.jpg'
-    ]
-
-    seeder_media_dir = File.expand_path('../seeder_media', __FILE__)
-    project_root = File.expand_path('../../', __FILE__)
-
-    db = CMS::Config.db
-
-    file_meta = media_files.map do |filename|
-      file_path = File.join(seeder_media_dir, filename)
-
-      raise "File not found: #{filename}" unless File.exist?(file_path)
-
-      Media.upload(
-        db: db,
-        tempfile: File.open(file_path),
-        filename: filename,
-        out_dir: 'public/uploads/',
-      )
-    end
-
-    movies_collection = CMS::Config.collections.find { |col| col.slug == "movies" }
-
-    # Forrest gump
-    movies_collection.insert({
+    movies.insert({
       "title" => "Forrest Gump",
       "description" => "Lorem ipsum",
       "tmdb_id" => "13-forrest-gump",
-      "poster" => file_meta[1][:id],
-      "backdrop" => file_meta[0][:id],
+      "poster" => get_seeder_media('forrest_gump_poster.jpg'),
+      "backdrop" => get_seeder_media('forrest_gump_backdrop.jpg'),
     })
 
-    # Spirited away
-    movies_collection.insert({
+    movies.insert({
       "title" => "Spirited Away",
       "description" => "Lorem ipsum",
       "tmdb_id" => "129",
-      "poster" => file_meta[3][:id],
-      "backdrop" => file_meta[2][:id],
+      "poster" => get_seeder_media('spirited_away_poster.jpg'),
+      "backdrop" => get_seeder_media('spirited_away_backdrop.jpg'),
     })
+
+    users.insert({
+      "username" => "Admin",
+      "email" => "admin@example.com",
+      "password" => "password",
+      "admin" => true,
+    })
+  end
+
+  def self.get_seeder_media(filename)
+    seeder_media_dir = File.expand_path('../seeder_media', __FILE__)
+    file_path = File.join(seeder_media_dir, filename)
+
+    {
+      "filename" => filename,
+      "tempfile" => File.open(file_path),
+    }
   end
 end

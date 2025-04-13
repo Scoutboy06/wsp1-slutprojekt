@@ -10,6 +10,8 @@
     name="<%= field.name %>"
     id="<%= field.name %>"
     class="px-2 py-1 border border-black"
-    <%= field.required ? "required" : "" %>
+    <%= field.required ? "required" : "" %><% if value %>
+    value="<%= value %>"
+    <% end %>
   >
 </div>

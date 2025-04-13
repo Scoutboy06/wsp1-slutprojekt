@@ -4,7 +4,7 @@
     name="<%= field.name %>"
     id="<%= field.name %>"
     class="border border-black"
-    <%= @entry[field.name] ? "checked" : "" %>
+    <%= value == 1 ? "checked" : "" %>
   >
   <label for="<%= field.name %>"><%= field.name %></label>
 </div>

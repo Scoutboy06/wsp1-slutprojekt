@@ -7,7 +7,7 @@ class Collection
   include DatabaseOperations
   attr_reader :name, :slug, :upload, :admin_thumbnail, :mime_types, :fields
 
-  def initialize(name:, slug:, upload: nil, admin_thumbnail: nil, mime_types: nil, fields: [])
+  def initialize(name:, slug:, fields: [])
     @name = name
     @slug = slug
     @upload = upload
@@ -17,14 +17,26 @@ class Collection
   end
 
   def self.from_hash(hash)
-    new(
-      name: hash[:name],
-      slug: hash[:slug],
-      upload: hash[:upload] ? UploadConfig.from_hash(hash[:upload]) : nil,
-      admin_thumbnail: hash[:admin_thumbnail],
-      mime_types: hash[:mime_types],
-      fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
-    )
+    case hash[:__internal_class]
+    when :media
+      Media.new(
+        name: hash[:name],
+        slug: hash[:slug],
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+      )
+    when :user
+      User.new(
+        name: hash[:name],
+        slug: hash[:slug],
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+      )
+    else
+      new(
+        name: hash[:name],
+        slug: hash[:slug],
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+      )
+    end
   end
 
   def setup_db(db)
@@ -80,7 +92,7 @@ class Collection
     end
     ### end WHERE ###
 
-    query_str = query_parts.join("\n  ")
+    query_str = query_parts.join("\n")
     data = execute_sql(query_str, query_values)
 
     data.each do |result_item|
@@ -107,90 +119,31 @@ class Collection
     execute_sql(exec_str, values)
   end
 
-  def update(data:, id: nil)
-    if slug == 'media'
-      Media.replace(
-        db: @db,
-        tempfile: data['tempfile'],
-        filename: data['filename'],
-        out_dir: "public/uploads/",
-      )
-      return
-    end
-
-    query_parts = ["UPDATE #{self.slug} SET"]
-
-    # Handle the SET clause for owned fields
-    set_clauses = fields
-      .reject(&:relation_to)
-      .map { |field| "#{field.name} = ?"}
-    query_parts << set_clauses.join(', ') if set_clauses.any?
-
-    values = fields
-      .reject(&:relation_to)
-      .map { |field| data.fetch(field.name, nil) }
-
-    # Handle the WHERE clause for updating a specific record
-    unless id.nil?
-      query_parts << "WHERE id = ?"
-      values << id
-    end
-
-    execute_sql(query_parts.join("\n"), values)
+  def update(id:, data:, id_expr: '?')
+    exec_str, values = build_update_query(slug, fields, data, id: id, id_expr: id_expr)
+    execute_sql(exec_str, values, debug: true)
 
     handle_related_collection_updates(data, id)
   end
 
-  def update_by_id_expr(data:, id_expr:, values:)
-    if slug == 'media'
-      Media.replace_by_id_expr(
-        db: @db,
-        id_expr: id_expr,
-        values: values,
-        tempfile: data['tempfile'],
-        filename: data['filename'],
-        out_dir: 'public/uploads/',
-      )
-      return
-    end
-
-    exec_str, vals = build_update_query(slug, fields, data, id_expr: id_expr, values: values)
-    execute_sql(exec_str, vals)
-
-    handle_related_collection_updates(data, values.first)
-    puts "------------------------"
+  def delete(id:, id_expr: '?')
+    execute_sql("DELETE FROM #{slug} WHERE id = (#{id_expr})", [id])
   end
 
-  def delete(id:)
-    if self.slug == 'media'
-      Media.delete(db: @db, id: id)
-      return
-    end
-    execute_sql("DELETE FROM #{slug} WHERE id = ?", [id])
-  end
+  private
 
-  def delete_by_id_expr(id_expr:, values:)
-    if self.slug == 'media'
-      Media.delete_by_id_expr(db: @db, id_expr: id_expr, values: values)
-      return
-    end
-    execute_sql(build_delete_query(slug, id_expr: id_expr), values)
-  end
-
-  private def handle_related_collection_updates(data, parent_id)
+  def handle_related_collection_updates(data, parent_id)
     CMS::Config.collections.each do |collection|
       relation_fields = fields.select { |f| f.relation_to == collection.slug }
       relation_fields.each do |field|
-        updated_key = "#{field.name}__updated"
-        next unless data.key?(updated_key)
-
         related_data = data.fetch(field.name, nil)
-        if related_data.is_a?(Hash) && related_data.key?('tempfile') && related_data.key?('filename')
-          media_id = collection.update_by_id_expr(
-            data: related_data,
-            id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
-            values: [parent_id],
-          )
+
+        if collection.is_a?(Media)
+          is_replaced = data.key?(field.name + '__replaced')
+          if is_replaced
+            # collection.update()
+          else
+          end
         elsif related_data.nil?
           collection.delete_by_id_expr(
             id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
@@ -207,7 +160,7 @@ class Collection
     end
   end
 
-  private def update_parent_with_relation(parent_id, relation_field_name, related_id)
+  def update_parent_with_relation(parent_id, relation_field_name, related_id)
     exec_str = "UPDATE #{slug} SET #{relation_field_name} = ? WHERE id = ?"
     execute_sql(exec_str, [related_id, parent_id])
   end

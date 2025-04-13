@@ -1,29 +1,20 @@
 require "sqlite3"
+require_relative "lib/cms/lib"
 
 DB = SQLite3::Database.new "db/cms_db.sqlite"
 DB.results_as_hash = true
 DB.execute("PRAGMA foreign_keys = ON;")
 
-# Field types:
-# - string
-# - boolean
-# - (array)
-# - timestamp
-# - upload
-
 COLLECTIONS = [
-  {
-    name: "Users",
-    slug: "users",
-    fields: [
-      { name: "email", type: "email", required: true },
-      { name: "password", type: "password", required: true, admin_visible: false },
-      { name: "first_name", type: "string" },
-      { name: "last_name", type: "string" },
-      { name: "phone", type: "string" },
-      { name: "admin", type: "boolean", default: false, admin_visible: false },
-    ],
-  },
+  CMS.build_user_config(use_pfp: true, custom_fields: [
+    { name: "first_name", type: "string" },
+    { name: "last_name", type: "string" },
+    { name: "phone", type: "string" },
+    { name: "admin", type: "boolean", default: false, admin_visible: false },
+  ]),
+  CMS.build_media_config(upload_path: "public/uploads/", custom_fields: [
+    { name: "alt", type: "string" },
+  ]),
   {
     name: "Pages",
     slug: "pages",

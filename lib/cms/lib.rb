@@ -2,10 +2,21 @@ require_relative "admin/routes"
 require_relative "api/routes"
 require_relative "lib/collection"
 require_relative "lib/global"
+require_relative "lib/auth_provider"
+require_relative "lib/user"
 
 module CMS
   AdminRoutes = ::AdminRoutes
   ApiRoutes = ::ApiRoutes
+  Auth = ::Auth
+
+  def self.build_user_config(**kwargs)
+    User.build_config(**kwargs)
+  end
+
+  def self.build_media_config(**kwargs)
+    Media.build_config(**kwargs)
+  end
 
   module Config
     CONFIG_FILE = File.expand_path("../../cms_config.rb", __dir__)
@@ -17,7 +28,6 @@ module CMS
 
       if @collections.nil?
         @collections = COLLECTIONS.map { |c| Collection.from_hash(c) }
-        @collections << Media.get_collection
         @collections.each { |c| c.setup_db(@db) }
       end
 
@@ -40,4 +50,3 @@ module CMS
     end
   end
 end
-
