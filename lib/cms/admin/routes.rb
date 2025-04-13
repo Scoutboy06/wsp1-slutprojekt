@@ -16,6 +16,18 @@ class AdminRoutes < Sinatra::Base
   end
 
   before do
+    return unless request.path_info.start_with?('/admin')
+
+    if CMS::Auth.enabled
+      puts "Hello"
+      session = CMS::Auth.session
+      if !session || !session[:user_id]
+        status 401
+        redirect '/login'
+        return
+      end
+    end
+    
     @collections = CMS::Config.collections
     @globals = CMS::Config.globals
     @db = CMS::Config.db

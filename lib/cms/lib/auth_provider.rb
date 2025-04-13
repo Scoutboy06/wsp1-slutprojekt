@@ -5,6 +5,10 @@ class Auth < Sinatra::Base
                              path: "/",
                              secret: ENV["SESSION_SECRET"]
 
+  class << self
+    attr_accessor :enabled, :current_session
+  end
+  
   helpers do
     def protected!
       redirect "/login" unless @is_signed_in
@@ -15,7 +19,15 @@ class Auth < Sinatra::Base
     end
   end
 
-  def self.sign_in(session, username:, password:)
+  before do
+    Auth.current_session = session
+  end
+
+  def self.session
+    current_session
+  end
+
+  def self.sign_in(username:, password:)
     user_col = CMS::Config.collections.find { |c| c.is_a?(User) }
     raise "User collection not defined" if user_col.nil?
 
@@ -27,14 +39,14 @@ class Auth < Sinatra::Base
     is_valid_pass = bcrypt_db_pass == password
 
     if is_valid_pass
-      session[:user_id] = user['id']
+      Auth.current_session[:user_id] = user['id']
       true
     else
       false
     end
   end
 
-  def self.sign_out(session)
+  def self.sign_out
     session.clear
   end
 end
