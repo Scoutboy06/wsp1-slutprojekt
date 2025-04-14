@@ -36,7 +36,6 @@ class Media < Collection
       "INSERT INTO media (file_path, url, file_name, mime_type, width, height)
       VALUES (?,?,?,?,?,?)",
       ["temp", "temp", filename, mime_type, width, height],
-      debug: true,
     )
     id = @db.last_insert_row_id
 
@@ -65,7 +64,7 @@ class Media < Collection
     filename = data['filename']
 
     # 1. Get the old file path
-    old_media_data = execute_sql("SELECT file_path, id FROM media WHERE id = (#{id_expr})", [id], debug: true).first
+    old_media_data = execute_sql("SELECT file_path, id FROM media WHERE id = (#{id_expr})", [id]).first
     raise "No old media" if old_media_data.nil?
 
     old_file_path = old_media_data['file_path']
@@ -90,7 +89,6 @@ class Media < Collection
       SET file_path = ?, url = ?, file_name = ?
       WHERE id = (#{id_expr})",
       [disk_file_path, url, disk_filename, id],
-      debug: true,
     )
 
     { id: id, url: url, filename: disk_filename, path: disk_file_path }

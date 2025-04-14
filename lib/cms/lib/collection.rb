@@ -64,7 +64,7 @@ class Collection
     sql += " OFFSET ?" if offset
 
     values += [limit, offset].compact
-    
+
     execute_sql(sql, values)
   end
 
@@ -187,9 +187,9 @@ class Collection
     query_parts << set_clauses.join(', ') if set_clauses.any?
     query_parts << "WHERE id = (#{id_expr})"
     values.push(id)
-    
+
     exec_str = query_parts.join("\n")
-    execute_sql(exec_str, values, debug: true)
+    execute_sql(exec_str, vals)
   end
 
   def delete(id:, id_expr: '?')
