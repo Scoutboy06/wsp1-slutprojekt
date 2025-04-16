@@ -24,7 +24,8 @@ class AdminRoutes < Sinatra::Base
 
     if CMS::Auth.enabled
       session = CMS::Auth.session
-      if !session || !session[:user_id]
+
+      if !session || !session[:user_id] || session[:is_admin] == false
         status 401
         redirect '/login'
         return

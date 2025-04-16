@@ -68,6 +68,20 @@ class Collection
     execute_sql(sql, values)
   end
 
+  def select_by_either(limit: nil, offset: nil, **args)
+    conditions = args.map { |key, value| "#{key} = ?" }.join(' OR ')
+    values = args.values
+
+    sql = "SELECT * FROM #{slug}"
+    sql += " WHERE #{conditions}" unless conditions.empty?
+    sql += " LIMIT ?" if limit
+    sql += " OFFSET ?" if offset
+
+    values += [limit, offset].compact
+
+    execute_sql(sql, values)
+  end
+
   def nested_select(id: nil, limit: nil, offset: nil)
     all_collections = CMS::Config.collections
     query_parts = []

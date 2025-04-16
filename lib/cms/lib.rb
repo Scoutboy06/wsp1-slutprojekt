@@ -1,9 +1,9 @@
-require_relative "admin/routes"
-require_relative "api/routes"
-require_relative "lib/collection"
-require_relative "lib/global"
-require_relative "lib/auth_provider"
-require_relative "lib/user"
+require_relative 'admin/routes'
+require_relative 'api/routes'
+require_relative 'lib/collection'
+require_relative 'lib/global'
+require_relative 'lib/auth_provider'
+require_relative 'lib/user'
 
 module CMS
   AdminRoutes = ::AdminRoutes
@@ -19,11 +19,11 @@ module CMS
   end
 
   def self.collection(slug)
-    @collections.find { |col| col.slug == slug }
+    CMS::Config.collections.find { |col| col.slug == slug }
   end
 
   module Config
-    CONFIG_FILE = File.expand_path("../../cms_config.rb", __dir__)
+    CONFIG_FILE = File.expand_path('../../cms_config.rb', __dir__)
 
     def self.load
       require CONFIG_FILE
@@ -35,10 +35,10 @@ module CMS
         @collections.each { |c| c.setup_db(@db) }
       end
 
-      if @globals.nil?
-        @globals = GLOBALS.map { |g| Global.from_hash(g) }
-        # @globals.each { |g| g.setup_db(@db) }
-      end
+      return unless @globals.nil?
+
+      @globals = GLOBALS.map { |g| Global.from_hash(g) }
+      # @globals.each { |g| g.setup_db(@db) }
     end
 
     def self.collections

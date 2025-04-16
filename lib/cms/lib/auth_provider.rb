@@ -1,17 +1,18 @@
-require "sinatra/base"
+require 'sinatra/base'
+require_relative '../utils/valid_email'
 
 class Auth < Sinatra::Base
-  use Rack::Session::Cookie, key: "rack.session",
-                             path: "/",
-                             secret: ENV["SESSION_SECRET"]
+  use Rack::Session::Cookie, key: 'rack.session',
+                             path: '/',
+                             secret: ENV['SESSION_SECRET']
 
   class << self
-    attr_accessor :enabled, :current_session
+    attr_accessor :enabled, :admin_column, :current_session
   end
-  
+
   helpers do
     def protected!
-      redirect "/login" unless @is_signed_in
+      redirect '/login' unless @is_signed_in
     end
 
     def authorized?
@@ -29,7 +30,7 @@ class Auth < Sinatra::Base
 
   def self.sign_in(username:, password:)
     user_col = CMS::Config.collections.find { |c| c.is_a?(User) }
-    raise "User collection not defined" if user_col.nil?
+    raise 'User collection not defined' if user_col.nil?
 
     user = user_col.select_by(username: username, limit: 1).first
     return false if user.nil?
@@ -40,10 +41,35 @@ class Auth < Sinatra::Base
 
     if is_valid_pass
       Auth.current_session[:user_id] = user['id']
+      Auth.current_session[:is_admin] = user[admin_column] unless admin_column.nil?
       true
     else
       false
     end
+  end
+
+  # @param username [String] the desired username
+  # @param email [String] the user's email address
+  # @param password [String] the user's password
+  # @return [Array]
+  #   Returns [user_id, nil] on success or [nil, error_code] on failure.
+  def self.sign_up(username:, email:, password:)
+    user_col = CMS.collection('users')
+    raise 'User collection not defined' if user_col.nil?
+
+    return [nil, 'invalidUsername'] unless username.is_a?(String) && username.length > 0
+    return [nil, 'invalidEmail'] unless valid_email?(email)
+
+    existing_user = user_col.select_by(email: email).first
+    return [nil, 'emailAlreadyInUse'] unless existing_user
+
+    user_col.insert({
+                      'username' => username,
+                      'email' => email,
+                      'password' => password
+                    })
+
+    [CMS::Config.db.last_insert_row_id, nil]
   end
 
   def self.sign_out
