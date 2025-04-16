@@ -28,11 +28,11 @@ class Auth < Sinatra::Base
     current_session
   end
 
-  def self.sign_in(username:, password:)
+  def self.sign_in(email:, password:)
     user_col = CMS::Config.collections.find { |c| c.is_a?(User) }
     raise 'User collection not defined' if user_col.nil?
 
-    user = user_col.select_by(username: username, limit: 1).first
+    user = user_col.select_by(email: email, limit: 1).first
     return false if user.nil?
 
     hashed_password = user['password'].to_s
@@ -41,7 +41,7 @@ class Auth < Sinatra::Base
 
     if is_valid_pass
       Auth.current_session[:user_id] = user['id']
-      Auth.current_session[:is_admin] = user[admin_column] unless admin_column.nil?
+      Auth.current_session[:is_admin] = user[admin_column] if admin_column else nil
       true
     else
       false

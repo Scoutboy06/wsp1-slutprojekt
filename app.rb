@@ -93,12 +93,12 @@ class App < Sinatra::Base
   # Attempts to authenticate the user using provided credentials.
   # Redirects to '/' on successful login.
   # Redirects back to '/login?error=invalidCredentials' on failure.
-  # @param [String] username The username submitted via the form.
+  # @param [String] email The email submitted via the form.
   # @param [String] password The password submitted via the form.
   # @return [void] Performs a redirect based on authentication result.
   post '/login' do
     success = Auth.sign_in(
-      username: params[:username],
+      email: params[:email],
       password: params[:password]
     )
     redirect '/' if success
