@@ -60,8 +60,8 @@ class Auth < Sinatra::Base
     return [nil, 'invalidUsername'] unless username.is_a?(String) && username.length > 0
     return [nil, 'invalidEmail'] unless valid_email?(email)
 
-    existing_user = user_col.select_by(email: email).first
-    return [nil, 'emailAlreadyInUse'] unless existing_user
+    existing_user = user_col.select_by(email: email, limit: 1).first
+    return [nil, 'emailAlreadyInUse'] unless existing_user.nil?
 
     user_col.insert({
                       'username' => username,
@@ -69,7 +69,10 @@ class Auth < Sinatra::Base
                       'password' => password
                     })
 
-    [CMS::Config.db.last_insert_row_id, nil]
+    user_id = CMS::Config.db.last_insert_row_id
+    session[:user_id] = user_id
+
+    [user_id, nil]
   end
 
   def self.sign_out
