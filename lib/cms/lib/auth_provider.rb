@@ -41,7 +41,7 @@ class Auth < Sinatra::Base
 
     if is_valid_pass
       Auth.current_session[:user_id] = user['id']
-      Auth.current_session[:is_admin] = user[admin_column] if admin_column else nil
+      Auth.current_session[:is_admin] = admin_column ? user[admin_column] : nil
       true
     else
       false
