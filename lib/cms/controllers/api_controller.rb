@@ -1,9 +1,9 @@
-require "sinatra"
-require "bcrypt"
-require "json"
-require_relative "../lib/collection"
+require 'sinatra'
+require 'bcrypt'
+require 'json'
+require_relative '../models/collection'
 
-class ApiRoutes < Sinatra::Base
+class ApiController < Sinatra::Base
   before do
     content_type :json
 
@@ -13,13 +13,9 @@ class ApiRoutes < Sinatra::Base
 
     @settings = []
 
-    if !@collections.nil?
-      @settings << { name: "Collections", slug: "collections", items: @collections }
-    end
+    @settings << { name: 'Collections', slug: 'collections', items: @collections } unless @collections.nil?
 
-    if !@collections.nil?
-      @settings << { name: "Globals", slug: "globals", items: @globals }
-    end
+    @settings << { name: 'Globals', slug: 'globals', items: @globals } unless @collections.nil?
   end
 
   # @method GET
@@ -31,7 +27,7 @@ class ApiRoutes < Sinatra::Base
   # @param [Integer] page Query parameter for pagination page number (default: 0). (Optional)
   # @return [String] JSON array of collection entries.
   # @raise [Sinatra::NotFound] Halts with 404 (JSON response) if the collection slug does not exist.
-  get "/api/collections/:slug" do |slug|
+  get '/api/collections/:slug' do |slug|
     @collection = @collections.find { |c| c.slug == slug }
     halt 404 if @collection.nil?
     limit = Integer(params[:limit], exception: false) || 50
@@ -39,7 +35,7 @@ class ApiRoutes < Sinatra::Base
 
     data = @collection.nested_select(
       limit: limit,
-      offset: offset,
+      offset: offset
     )
     data.to_json
   end
@@ -51,7 +47,7 @@ class ApiRoutes < Sinatra::Base
   # @param [String] id The ID of the entry to retrieve.
   # @return [String] JSON object representing the single entry.
   # @raise [Sinatra::NotFound] Halts with 404 (JSON response) if the collection or entry ID is not found.
-  get "/api/collections/:slug/:id" do |slug, id|
+  get '/api/collections/:slug/:id' do |slug, id|
     @collection = @collections.find { |c| c.slug == slug }
     halt 404 if @collection.nil?
 
@@ -66,7 +62,7 @@ class ApiRoutes < Sinatra::Base
   # @param [String] request.body The JSON payload representing the new entry data.
   # @return [String] JSON response containing the ID of the newly created entry.
   # @raise [Sinatra::NotFound] Halts with 404 (JSON response) if the collection slug does not exist.
-  post "/api/collections/:slug" do |slug|
+  post '/api/collections/:slug' do |slug|
     @collection = @collections.find { |c| c.slug == slug }
     halt 404 if @collection.nil?
 
@@ -84,10 +80,9 @@ class ApiRoutes < Sinatra::Base
   # @param [String] id The ID of the entry to delete.
   # @return [void] Returns status 200 OK on successful deletion.
   # @raise [Sinatra::NotFound] Halts with 404 (JSON response) if the collection slug or entry ID does not exist.
-  delete "/api/collections/:slug/:id" do |slug, id|
+  delete '/api/collections/:slug/:id' do |slug, id|
     @collection = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
-
 
     @collection.delete(id.to_i)
     rows_deleted = @db.changes
@@ -95,7 +90,7 @@ class ApiRoutes < Sinatra::Base
     if rows_deleted > 0
       status 200
     else
-      halt 404, { error: "Record not found" }.to_json
+      halt 404, { error: 'Record not found' }.to_json
     end
   end
 end

@@ -1,12 +1,12 @@
-require "sinatra/base"
-require_relative "../lib"
-require_relative "../lib/media"
+require 'sinatra/base'
+require_relative '../lib'
+require_relative '../models/media'
 
-class AdminRoutes < Sinatra::Base
+class AdminController < Sinatra::Base
   configure do
-    set :root, File.dirname(__FILE__) # Set root to the current directory
-    set :views, File.join(root, "views") # Tell Sinatra where to find views
-    set :public_folder, File.join(root, "public") # Tell Sinatra where to find public files
+    set :root, File.dirname(__FILE__)
+    set :views, File.join(root, '../views/admin')
+    set :public_folder, File.join(root, 'public')
   end
 
   helpers do
@@ -15,7 +15,7 @@ class AdminRoutes < Sinatra::Base
     # @param [Hash] options Local variables to pass to the template.
     # @return [String] The rendered partial HTML.
     def partial(template, options = {})
-      erb template.to_sym, options.merge!(:layout => false)
+      erb template.to_sym, options.merge!(layout: false)
     end
   end
 
@@ -23,9 +23,9 @@ class AdminRoutes < Sinatra::Base
     return unless request.path_info.start_with?('/admin')
 
     if CMS::Auth.enabled
-      session = CMS::Auth.session
+      s = CMS::Auth.session
 
-      if !session || !session[:user_id] || session[:is_admin] == false
+      if !s || !s[:user_id] || s[:is_admin] == false
         status 401
         redirect '/login'
         return
@@ -38,13 +38,9 @@ class AdminRoutes < Sinatra::Base
 
     @settings = []
 
-    if !@collections.nil?
-      @settings << { name: "Collections", slug: "collections", items: @collections }
-    end
+    @settings << { name: 'Collections', slug: 'collections', items: @collections } unless @collections.nil?
 
-    if !@collections.nil?
-      @settings << { name: "Globals", slug: "globals", items: @globals }
-    end
+    @settings << { name: 'Globals', slug: 'globals', items: @globals } unless @collections.nil?
   end
 
   # @method GET
@@ -52,7 +48,7 @@ class AdminRoutes < Sinatra::Base
   # Displays the main admin dashboard/index page.
   # Requires authentication (enforced by the `before` filter).
   # @return [String] Renders the admin index view (erb :index).
-  get "/admin/?" do
+  get '/admin/?' do
     erb :index
   end
 
@@ -62,8 +58,8 @@ class AdminRoutes < Sinatra::Base
   # If no collections are defined, redirects back to the admin dashboard.
   # Requires authentication.
   # @return [void] Performs a redirect.
-  get "/admin/collections" do
-    redirect "/admin" if @collections.empty?
+  get '/admin/collections' do
+    redirect '/admin' if @collections.empty?
     redirect "/admin/collections/#{@collections[0].slug}"
   end
 
@@ -76,7 +72,7 @@ class AdminRoutes < Sinatra::Base
   # @param [Integer] page Query parameter for pagination page number (default: 0). (Optional)
   # @return [String] Renders the collection entries view (erb :entry_details).
   # @raise [Sinatra::NotFound] Halts with 404 if the collection slug does not exist.
-  get "/admin/collections/:slug" do |slug|
+  get '/admin/collections/:slug' do |slug|
     @collection = @collections.find { |c| c.slug == slug }
     halt 404 if @collection.nil?
 
@@ -85,7 +81,7 @@ class AdminRoutes < Sinatra::Base
 
     @entries = @collection.nested_select(
       limit: limit,
-      offset: offset,
+      offset: offset
     )
 
     erb :entry_details
@@ -98,7 +94,7 @@ class AdminRoutes < Sinatra::Base
   # @param [String] slug The slug of the collection to add an entry to.
   # @return [String] Renders the new entry form (erb :new_entry).
   # @raise [Sinatra::NotFound] Halts with 404 if the collection slug does not exist.
-  get "/admin/collections/:slug/new" do |slug|
+  get '/admin/collections/:slug/new' do |slug|
     @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
     erb :new_entry
@@ -112,7 +108,7 @@ class AdminRoutes < Sinatra::Base
   # @param [String] id The ID of the entry to edit.
   # @return [String] Renders the edit entry form (erb :edit_entry).
   # @raise [Sinatra::NotFound] Halts with 404 if the collection or entry ID is not found.
-  get "/admin/collections/:slug/:id/edit" do |slug, id|
+  get '/admin/collections/:slug/:id/edit' do |slug, id|
     @collection = @collections.find { |c| c.slug == slug }
     halt 404 if @collection.nil?
 
@@ -131,12 +127,12 @@ class AdminRoutes < Sinatra::Base
   # @param [Hash] params Contains the form data submitted for the entry update.
   # @return [void] Redirects back to the edit form upon completion.
   # @raise [Sinatra::NotFound] Halts with 404 if the collection slug does not exist.
-  post "/admin/collections/:__slug/:__id/edit" do |__slug, __id|
+  post '/admin/collections/:__slug/:__id/edit' do |__slug, __id|
     @collection = @collections.find { |c| c.slug == __slug }
     halt 404 if @collection.nil?
 
     @collection.update(
-      data: params.except("__slug", "__id"),
+      data: params.except('__slug', '__id'),
       id: __id.to_i
     )
 
@@ -151,7 +147,7 @@ class AdminRoutes < Sinatra::Base
   # @param [Hash] params Contains the form data submitted for the new entry.
   # @return [void] Sets status 201 and redirects to the collection's entry list.
   # @raise [Sinatra::NotFound] Halts with 404 if the collection slug does not exist.
-  post "/admin/collections/:__slug" do |slug|
+  post '/admin/collections/:__slug' do |slug|
     @setting = @collections.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
 
@@ -168,7 +164,7 @@ class AdminRoutes < Sinatra::Base
   # @param [String] slug The slug of the global setting.
   # @return [String] Renders the global setting details/edit view (erb :entry_details).
   # @raise [Sinatra::NotFound] Halts with 404 if the global slug does not exist.
-  get "/admin/globals/:slug" do |slug|
+  get '/admin/globals/:slug' do |slug|
     @setting = @globals.find { |g| g.slug == slug }
     halt 404 if @setting.nil?
     erb :entry_details

@@ -1,6 +1,9 @@
 require 'sinatra/base'
 require 'rack/attack'
 require_relative 'lib/cms/lib'
+require_relative 'lib/cms/controllers/admin_controller'
+require_relative 'lib/cms/controllers/api_controller'
+require_relative 'lib/cms/controllers/auth_controller'
 
 class App < Sinatra::Base
   use CMS::AdminRoutes
@@ -97,7 +100,7 @@ class App < Sinatra::Base
   # @param [String] password The password submitted via the form.
   # @return [void] Performs a redirect based on authentication result.
   post '/login' do
-    success = Auth.sign_in(
+    success = CMS::Auth.sign_in(
       email: params[:email],
       password: params[:password]
     )

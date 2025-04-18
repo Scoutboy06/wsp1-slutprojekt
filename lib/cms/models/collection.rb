@@ -1,6 +1,5 @@
-require_relative "./field"
-require_relative "./upload_config"
-require_relative "./db_helpers"
+require_relative './field'
+require_relative '../utils/db_helpers'
 require_relative '../lib'
 
 class Collection
@@ -22,25 +21,25 @@ class Collection
       Media.new(
         name: hash[:name],
         slug: hash[:slug],
-        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || []
       )
     when :user
       User.new(
         name: hash[:name],
         slug: hash[:slug],
-        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || []
       )
     else
       new(
         name: hash[:name],
         slug: hash[:slug],
-        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || []
       )
     end
   end
 
   def setup_db(db)
-    field_strs = ["id INTEGER PRIMARY KEY AUTOINCREMENT"]
+    field_strs = ['id INTEGER PRIMARY KEY AUTOINCREMENT']
     field_strs.push(*@fields.map { |f| f.get_sql_column_string })
 
     exec_str = "CREATE TABLE IF NOT EXISTS #{@slug} (\n#{field_strs.join(",\n")}\n);"
@@ -55,13 +54,13 @@ class Collection
   end
 
   def select_by(limit: nil, offset: nil, **args)
-    conditions = args.map { |key, value| "#{key} = ?" }.join(' AND ')
+    conditions = args.map { |key, _value| "#{key} = ?" }.join(' AND ')
     values = args.values
 
     sql = "SELECT * FROM #{slug}"
     sql += " WHERE #{conditions}" unless conditions.empty?
-    sql += " LIMIT ?" if limit
-    sql += " OFFSET ?" if offset
+    sql += ' LIMIT ?' if limit
+    sql += ' OFFSET ?' if offset
 
     values += [limit, offset].compact
 
@@ -69,13 +68,13 @@ class Collection
   end
 
   def select_by_either(limit: nil, offset: nil, **args)
-    conditions = args.map { |key, value| "#{key} = ?" }.join(' OR ')
+    conditions = args.map { |key, _value| "#{key} = ?" }.join(' OR ')
     values = args.values
 
     sql = "SELECT * FROM #{slug}"
     sql += " WHERE #{conditions}" unless conditions.empty?
-    sql += " LIMIT ?" if limit
-    sql += " OFFSET ?" if offset
+    sql += ' LIMIT ?' if limit
+    sql += ' OFFSET ?' if offset
 
     values += [limit, offset].compact
 
@@ -88,8 +87,8 @@ class Collection
     query_values = []
 
     ### start SELECT ###
-    select_parts = ["#{self.slug}.*"]
-    fields_with_relations = self.fields.select(&:relation_to)
+    select_parts = ["#{slug}.*"]
+    fields_with_relations = fields.select(&:relation_to)
 
     fields_with_relations.each do |field|
       field_collection = all_collections.find { |c| c.slug == field.relation_to }
@@ -101,19 +100,19 @@ class Collection
     ### end SELECT ###
 
     ### start FROM ###
-    query_parts << "FROM #{self.slug}"
+    query_parts << "FROM #{slug}"
     ### end FROM ###
 
     ### start LEFT JOIN ###
     left_join_parts = fields_with_relations.map do |field|
-      "LEFT JOIN #{field.relation_to} AS #{field.name}_#{field.relation_to} ON #{self.slug}.#{field.name} = #{field.name}_#{field.relation_to}.id"
+      "LEFT JOIN #{field.relation_to} AS #{field.name}_#{field.relation_to} ON #{slug}.#{field.name} = #{field.name}_#{field.relation_to}.id"
     end
     query_parts << left_join_parts.join("\n  ")
     ### end LEFT JOIN ###
 
     ### start WHERE ###
     unless id.nil?
-      query_parts << "WHERE #{self.slug}.id = ?"
+      query_parts << "WHERE #{slug}.id = ?"
       query_values << id
     end
     ### end WHERE ###
@@ -149,18 +148,18 @@ class Collection
     query_parts = ["UPDATE #{slug} SET"]
 
     set_clauses = fields
-      .reject { |f| f.relation_to || f.type == "password" }
-      .map { |field| "#{field.name} = ?" }
+                  .reject { |f| f.relation_to || f.type == 'password' }
+                  .map { |field| "#{field.name} = ?" }
     values = fields
-      .reject { |f| f.relation_to || f.type == "password" }
-      .map do |field|
-        value = data.fetch(field.name, nil)
-        value = value == true || value == "on" ? 1 : 0 if field.type == "password"
-        value
-      end
+             .reject { |f| f.relation_to || f.type == 'password' }
+             .map do |field|
+      value = data.fetch(field.name, nil)
+      value = [true, 'on'].include?(value) ? 1 : 0 if field.type == 'password'
+      value
+    end
 
     password_fields_to_update = fields.select do |f|
-      f.type == "password" && data.key?(f.name) && data.fetch(f.name) != ""
+      f.type == 'password' && data.key?(f.name) && data.fetch(f.name) != ''
     end
 
     password_fields_to_update.each do |field|
@@ -222,18 +221,17 @@ class Collection
           is_replaced = data.key?(field.name + '__replaced')
           if is_replaced
             # collection.update()
-          else
           end
         elsif related_data.nil?
           collection.delete_by_id_expr(
             id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
-            values: [parent_id],
+            values: [parent_id]
           )
         else
           collection.update_by_id_expr(
             data: related_data,
             id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
-            values: [parent_id],
+            values: [parent_id]
           )
         end
       end

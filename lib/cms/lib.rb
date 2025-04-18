@@ -1,14 +1,15 @@
-require_relative 'admin/routes'
-require_relative 'api/routes'
-require_relative 'lib/collection'
-require_relative 'lib/global'
-require_relative 'lib/auth_provider'
-require_relative 'lib/user'
+require_relative 'controllers/admin_controller'
+require_relative 'controllers/api_controller'
+require_relative 'controllers/auth_controller'
+require_relative 'models/collection'
+require_relative 'models/global'
+require_relative 'models/user'
+require_relative 'models/media'
 
 module CMS
-  AdminRoutes = ::AdminRoutes
-  ApiRoutes = ::ApiRoutes
-  Auth = ::Auth
+  AdminRoutes = ::AdminController
+  ApiRoutes = ::ApiController
+  Auth = ::AuthController
 
   def self.build_user_config(**kwargs)
     User.build_config(**kwargs)

@@ -1,26 +1,25 @@
-require_relative './field'
-require_relative './upload_config'
+require_relative '../models/field'
 require_relative '../lib'
 
 module DatabaseOperations
   def execute_sql(sql, values = [], debug: false, db: nil)
-    db = (db || @db)
-    throw "Database not provided" if db.nil?
+    db ||= @db
+    throw 'Database not provided' if db.nil?
     if debug
       puts "\n---- SQL to execute ----"
       puts sql
-      puts "---- Values ----"
+      puts '---- Values ----'
       p values
-      puts ""
+      puts ''
     end
     db.execute(sql, values)
   end
 
   def build_select_query(slug, id: nil, limit: nil, offset: nil)
     exec_str = "SELECT * FROM #{slug}"
-    exec_str << " WHERE id = ?" unless id.nil?
-    exec_str << " LIMIT ?" unless limit.nil?
-    exec_str << " OFFSET ?" unless offset.nil?
+    exec_str << ' WHERE id = ?' unless id.nil?
+    exec_str << ' LIMIT ?' unless limit.nil?
+    exec_str << ' OFFSET ?' unless offset.nil?
     [exec_str, [id, limit, offset].compact]
   end
 
@@ -35,9 +34,9 @@ module DatabaseOperations
         @db.last_insert_row_id
       else
         case field.type
-        when "boolean"
-          value == true || value == "on" ? 1 : 0
-        when "password"
+        when 'boolean'
+          [true, 'on'].include?(value) ? 1 : 0
+        when 'password'
           BCrypt::Password.create(value) if value
         else
           value
@@ -51,21 +50,23 @@ module DatabaseOperations
   def build_update_query(slug, fields, data, id:, id_expr: '?')
     query_parts = ["UPDATE #{slug} SET"]
     set_clauses = fields
-      .reject { |f| f.relation_to || f.type == "password" }
-      .map{ |field| "#{field.name} = ?"}
+                  .reject { |f| f.relation_to || f.type == 'password' }
+                  .map { |field| "#{field.name} = ?" }
 
     vals = fields
-      .reject { |f| f.relation_to || f.type == "password" }
-      .map do |field|
-        value = data.fetch(field.name, nil)
-        value = value == true || value == "on" ? 1 : 0 if field.type == "password"
-        value
-      end
+           .reject { |f| f.relation_to || f.type == 'password' }
+           .map do |field|
+      value = data.fetch(field.name, nil)
+      value = [true, 'on'].include?(value) ? 1 : 0 if field.type == 'password'
+      value
+    end
 
     password_fields_to_update = fields
-      .select { |f| f.type == "password" &&
-                    data.key?(f.name) &&
-                    data.fetch(f.name) != "" }
+                                .select do |f|
+      f.type == 'password' &&
+        data.key?(f.name) &&
+        data.fetch(f.name) != ''
+    end
 
     password_fields_to_update.each do |field|
       set_clauses << "#{field.name} = ?"
@@ -79,7 +80,7 @@ module DatabaseOperations
       relation_col.update(
         id: id,
         id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
-        data: value,
+        data: value
       )
     end
 

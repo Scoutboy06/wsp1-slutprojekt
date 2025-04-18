@@ -1,7 +1,7 @@
 require 'sinatra/base'
 require_relative '../utils/valid_email'
 
-class Auth < Sinatra::Base
+class AuthController < Sinatra::Base
   use Rack::Session::Cookie, key: 'rack.session',
                              path: '/',
                              secret: ENV['SESSION_SECRET']
@@ -21,7 +21,7 @@ class Auth < Sinatra::Base
   end
 
   before do
-    Auth.current_session = session
+    self.class.current_session = session
   end
 
   def self.session
@@ -40,8 +40,10 @@ class Auth < Sinatra::Base
     is_valid_pass = bcrypt_db_pass == password
 
     if is_valid_pass
-      Auth.current_session[:user_id] = user['id']
-      Auth.current_session[:is_admin] = admin_column ? user[admin_column] : nil
+      session[:user_id] = user['id']
+      session[:is_admin] = admin_column&.then { !user[admin_column].to_i.zero? }
+      puts "User id: #{user['id']}"
+      puts "Is admin: #{session[:is_admin]}"
       true
     else
       false
