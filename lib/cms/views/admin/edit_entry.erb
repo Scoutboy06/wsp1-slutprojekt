@@ -1,9 +1,9 @@
 <div class="px-4 py-4" x-data='formHandler'>
   <a
     href="<%= request.path_info.split("/")[...-2].join("/") %>"
-    class="flex items-center gap-1 px-2 py-1 border border-black cursor-pointer w-min hover:bg-black hover:text-white"
+    class="flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer w-min hover:bg-gray-50"
   >
-    <i class="icon">arrow_back</i>
+    <i class="icon text-[18px]!">arrow_back</i>
     <span>Back</span>
   </a>
 
@@ -25,7 +25,7 @@
 
     <button
       type="submit"
-      class="py-2 border border-black cursor-pointer hover:bg-black hover:text-white"
+      class="px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600 bg-gradient-to-b"
     >Update</button>
   </form>
 </div>

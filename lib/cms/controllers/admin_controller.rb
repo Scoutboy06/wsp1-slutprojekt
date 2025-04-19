@@ -19,6 +19,13 @@ class AdminController < Sinatra::Base
     def partial(template, options = {})
       erb template.to_sym, options.merge!(layout: false)
     end
+
+    def is_signed_in?
+      return false unless CMS::Auth.enabled
+
+      s = CMS::Auth.session
+      s.nil? || s[:user_id].nil? ? false : true
+    end
   end
 
   before do
@@ -33,6 +40,8 @@ class AdminController < Sinatra::Base
         redirect '/login' + (redirect_to ? "?redirect=#{redirect_to}" : '')
         return
       end
+
+      @user = CMS::Auth.get_current_user
     end
 
     @collections = CMS::Config.collections

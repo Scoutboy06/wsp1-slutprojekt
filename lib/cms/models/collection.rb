@@ -4,15 +4,13 @@ require_relative '../lib'
 
 class Collection
   include DatabaseOperations
-  attr_reader :name, :slug, :upload, :admin_thumbnail, :mime_types, :fields
+  attr_reader :name, :slug, :fields, :icon
 
-  def initialize(name:, slug:, fields: [])
+  def initialize(name:, slug:, fields: [], icon: nil)
     @name = name
     @slug = slug
-    @upload = upload
-    @admin_thumbnail = admin_thumbnail
-    @mime_types = mime_types
     @fields = fields
+    @icon = icon
   end
 
   def self.from_hash(hash)
@@ -21,19 +19,22 @@ class Collection
       Media.new(
         name: hash[:name],
         slug: hash[:slug],
-        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || []
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+        icon: hash[:icon]
       )
     when :user
       User.new(
         name: hash[:name],
         slug: hash[:slug],
-        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || []
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+        icon: hash[:icon]
       )
     else
       new(
         name: hash[:name],
         slug: hash[:slug],
-        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || []
+        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+        icon: hash[:icon]
       )
     end
   end

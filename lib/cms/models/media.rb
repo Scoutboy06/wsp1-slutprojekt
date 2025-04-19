@@ -21,7 +21,7 @@ class Media < Collection
     ]
     fields.push(*custom_fields)
 
-    { name: name, slug: 'media', fields: fields, __internal_class: :media }
+    { name: name, slug: 'media', fields: fields, icon: 'image', __internal_class: :media }
   end
 
   def insert(data)

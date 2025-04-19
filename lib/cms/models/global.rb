@@ -1,8 +1,8 @@
 require_relative './collection'
 
 class Global < Collection
-  def initialize(name:, slug:, fields: [])
-    super(name: name, slug: slug, fields: fields)
+  def initialize(name:, slug:, fields: [], icon: nil)
+    super(name: name, slug: slug, fields: fields, icon: icon)
   end
 
   def setup_db(db)

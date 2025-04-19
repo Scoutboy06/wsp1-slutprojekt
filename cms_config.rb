@@ -24,6 +24,7 @@ COLLECTIONS = [
   {
     name: 'Pages',
     slug: 'pages',
+    icon: 'web',
     fields: [
       { name: 'title', type: 'string' },
       { name: 'body', type: 'string' }
@@ -32,6 +33,7 @@ COLLECTIONS = [
   {
     name: 'Movies',
     slug: 'movies',
+    icon: 'movie',
     fields: [
       { name: 'title', type: 'string', required: true },
       { name: 'description', type: 'string' },
@@ -44,8 +46,9 @@ COLLECTIONS = [
 
 GLOBALS = [
   {
-    name: 'Color theme',
-    slug: 'color_theme',
+    name: 'Theme',
+    slug: 'theme',
+    icon: 'color_lens',
     fields: [
       { name: 'background', type: 'string', default: '0 0% 100%' },
       { name: 'foreground', type: 'string', default: '224 71.4% 4.1%' },
@@ -75,8 +78,9 @@ GLOBALS = [
     ]
   },
   {
-    name: 'Dark color theme',
-    slug: 'dark_color_theme',
+    name: 'Dark theme',
+    slug: 'dark_theme',
+    icon: 'dark_mode',
     fields: [
       { name: 'background', type: 'string', default: '224 71.4% 4.1%' },
       { name: 'foreground', type: 'string', default: '210 20% 98%' },

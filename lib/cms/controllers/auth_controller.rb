@@ -28,6 +28,15 @@ class AuthController < Sinatra::Base
     current_session
   end
 
+  def self.get_current_user
+    return nil unless session[:user_id]
+
+    user_col = CMS.collection('users')
+    raise 'User collection not defined' if user_col.nil?
+
+    user_col.select_by(id: session[:user_id]).first
+  end
+
   def self.sign_in(email:, password:)
     user_col = CMS::Config.collections.find { |c| c.is_a?(User) }
     raise 'User collection not defined' if user_col.nil?
