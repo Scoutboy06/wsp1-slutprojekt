@@ -1,19 +1,24 @@
-require_relative "./field"
+require_relative './collection'
 
-class Global
-  attr_reader :name, :slug, :fields
-
+class Global < Collection
   def initialize(name:, slug:, fields: [])
-    @name = name
-    @slug = slug
-    @fields = fields
+    super(name: name, slug: slug, fields: fields)
   end
 
-  def self.from_hash(hash)
-    new(
-      name: hash[:name],
-      slug: hash[:slug],
-      fields: hash[:fields]&.map { |f| Field.from_hash(f) },
-    )
+  def setup_db(db)
+    super
+    db.execute("INSERT OR IGNORE INTO #{@slug} (id) VALUES (1)")
+  end
+
+  def select(*)
+    super(id: 1).first
+  end
+
+  def nested_select(*args)
+    super(*args, id: 1).first
+  end
+
+  def update(data:)
+    super(id: 1, data: data)
   end
 end

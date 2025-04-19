@@ -16,7 +16,7 @@ module DatabaseOperations
   end
 
   def build_select_query(slug, id: nil, limit: nil, offset: nil)
-    exec_str = "SELECT * FROM #{slug}"
+    exec_str = "SELECT * FROM \"#{slug}\""
     exec_str << ' WHERE id = ?' unless id.nil?
     exec_str << ' LIMIT ?' unless limit.nil?
     exec_str << ' OFFSET ?' unless offset.nil?
@@ -48,10 +48,10 @@ module DatabaseOperations
   end
 
   def build_update_query(slug, fields, data, id:, id_expr: '?')
-    query_parts = ["UPDATE #{slug} SET"]
+    query_parts = ["UPDATE \"#{slug}\" SET"]
     set_clauses = fields
                   .reject { |f| f.relation_to || f.type == 'password' }
-                  .map { |field| "#{field.name} = ?" }
+                  .map { |field| "'#{field.name.gsub("'", "''")}' = ?" }
 
     vals = fields
            .reject { |f| f.relation_to || f.type == 'password' }

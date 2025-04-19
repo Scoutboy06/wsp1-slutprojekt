@@ -42,8 +42,6 @@ class AuthController < Sinatra::Base
     if is_valid_pass
       session[:user_id] = user['id']
       session[:is_admin] = admin_column&.then { !user[admin_column].to_i.zero? }
-      puts "User id: #{user['id']}"
-      puts "Is admin: #{session[:is_admin]}"
       true
     else
       false

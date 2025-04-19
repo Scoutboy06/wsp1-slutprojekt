@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title><% if @title %><%= @title %><% else %>Admin<% end %></title>
+    <title><%= @title ? @title : 'Admin' %></title>
     <link rel="stylesheet" href="/style.css">
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
@@ -16,10 +16,10 @@
             x-data="{ open: true, toggle() {
               this.open = !this.open;
               this.$nextTick(() => {
-                this.$refs.content.style.height = this.open ? this.$refs.content.scrollHeight + 'px' : '0px';
-              })
+            this.$refs.content.style.height = this.open ? this.$refs.content.scrollHeight + 'px' : '0px';
+            })
             }}"
-          >
+            >
             <button
               type="button"
               aria-label="Toggle expansion"

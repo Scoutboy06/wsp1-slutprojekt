@@ -1,6 +1,8 @@
 require 'sinatra/base'
 require_relative '../lib'
 require_relative '../models/media'
+require_relative '../models/collection'
+require_relative '../models/global'
 
 class AdminController < Sinatra::Base
   configure do
@@ -27,7 +29,8 @@ class AdminController < Sinatra::Base
 
       if !s || !s[:user_id] || s[:is_admin] == false
         status 401
-        redirect '/login'
+        redirect_to = request.path_info
+        redirect '/login' + (redirect_to ? "?redirect=#{redirect_to}" : '')
         return
       end
     end
@@ -37,9 +40,7 @@ class AdminController < Sinatra::Base
     @db = CMS::Config.db
 
     @settings = []
-
     @settings << { name: 'Collections', slug: 'collections', items: @collections } unless @collections.nil?
-
     @settings << { name: 'Globals', slug: 'globals', items: @globals } unless @collections.nil?
   end
 
@@ -158,15 +159,82 @@ class AdminController < Sinatra::Base
   end
 
   # @method GET
-  # @path /admin/globals/:slug
-  # Displays the details/edit form for a specific global setting.
+  # @path /admin/globals
+  # Redirects to the view for the first available global setting.
+  # If no global settings are defined, redirects back to the admin dashboard.
   # Requires authentication.
-  # @param [String] slug The slug of the global setting.
-  # @return [String] Renders the global setting details/edit view (erb :entry_details).
-  # @raise [Sinatra::NotFound] Halts with 404 if the global slug does not exist.
+  # @return [void] Performs a redirect.
+  # @raise [Sinatra::NotFound] Halts with 404 if no global settings are defined.
+  get '/admin/globals' do
+    redirect '/admin' if @globals.empty?
+    redirect "/admin/globals/#{@globals[0].slug}"
+  end
+
+  # @method GET
+  # @path /admin/globals/:slug
+  # Displays a list of entries for a specific global setting.
+  # Requires authentication.
+  # @param [String] slug The unique identifier (slug) of the global setting.
   get '/admin/globals/:slug' do |slug|
-    @setting = @globals.find { |g| g.slug == slug }
+    status 301
+    redirect "/admin/globals/#{slug}/edit"
+  end
+
+  # @method GET
+  # @path /admin/globals/:slug/edit
+  # Displays the form to edit a specific global setting.
+  # Requires authentication.
+  # @param [String] slug The slug of the global setting to edit.
+  # @return [String] Renders the edit entry form (erb :edit_entry).
+  # @raise [Sinatra::NotFound] Halts with 404 if the global setting slug does not exist.
+  # @raise [Sinatra::NotFound] Halts with 404 if the entry ID is not found.
+  get '/admin/globals/:slug/edit' do |slug|
+    @collection = @globals.find { |c| c.slug == slug }
+    halt 404 if @collection.nil?
+
+    @entry = @collection.nested_select
+    halt 404 if @entry.nil?
+
+    erb :edit_entry
+  end
+
+  # @method POST
+  # @path /admin/globals/:__slug/edit
+  # Processes the submission of the edit global setting form. Updates the global setting in the database.
+  # Requires authentication.
+  # @param [String] __slug The slug of the global setting (from path).
+  # @param [Hash] params Contains the form data submitted for the global setting update.
+  # @return [void] Redirects back to the edit form upon completion.
+  # @raise [Sinatra::NotFound] Halts with 404 if the global setting slug does not exist.
+  # @raise [Sinatra::NotFound] Halts with 404 if the entry ID is not found.
+  post '/admin/globals/:__slug/edit' do |__slug|
+    @global = @globals.find { |c| c.slug == __slug }
+    halt 404 if @global.nil?
+
+    p params.except('__slug')
+    @global.update(
+      data: params.except('__slug')
+    )
+
+    redirect "/admin/globals/#{__slug}/edit"
+  end
+
+  # @method POST
+  # @path /admin/globals/:__slug
+  # Processes the submission of the new global setting form. Creates a new global setting in the database.
+  # Requires authentication.
+  # @param [String] __slug The slug of the global setting (from path).
+  # @param [Hash] params Contains the form data submitted for the new global setting.
+  # @return [void] Sets status 201 and redirects to the global setting's edit page.
+  # @raise [Sinatra::NotFound] Halts with 404 if the global setting slug does not exist.
+  # @raise [Sinatra::NotFound] Halts with 404 if the entry ID is not found.
+  post '/admin/globals/:__slug' do |slug|
+    @setting = @globals.find { |c| c.slug == slug }
     halt 404 if @setting.nil?
-    erb :entry_details
+
+    @setting.insert(params.except('__slug'))
+
+    status 201
+    redirect "/admin/globals/#{@setting.slug}/edit"
   end
 end

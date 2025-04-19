@@ -104,7 +104,7 @@ class App < Sinatra::Base
       email: params[:email],
       password: params[:password]
     )
-    redirect '/' if success
+    redirect(params[:redirect] || '/') if success
     status 401
     redirect '/login?error=invalidCredentials'
   end

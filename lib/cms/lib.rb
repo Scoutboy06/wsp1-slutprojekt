@@ -23,6 +23,14 @@ module CMS
     CMS::Config.collections.find { |col| col.slug == slug }
   end
 
+  def self.global(slug)
+    CMS::Config.globals.find { |col| col.slug == slug }
+  end
+
+  def self.find_by_slug(slug)
+    collection(slug) || global(slug)
+  end
+
   module Config
     CONFIG_FILE = File.expand_path('../../cms_config.rb', __dir__)
 
@@ -39,7 +47,7 @@ module CMS
       return unless @globals.nil?
 
       @globals = GLOBALS.map { |g| Global.from_hash(g) }
-      # @globals.each { |g| g.setup_db(@db) }
+      @globals.each { |g| g.setup_db(@db) }
     end
 
     def self.collections

@@ -39,13 +39,13 @@ class Collection
   end
 
   def setup_db(db)
-    field_strs = ['id INTEGER PRIMARY KEY AUTOINCREMENT']
-    field_strs.push(*@fields.map { |f| f.get_sql_column_string })
+    @db = db
+    field_strs = ['"id" INTEGER PRIMARY KEY AUTOINCREMENT']
+    field_strs.push(*fields.map(&:get_sql_column_string))
 
     exec_str = "CREATE TABLE IF NOT EXISTS #{@slug} (\n#{field_strs.join(",\n")}\n);"
 
-    db.execute(exec_str)
-    @db = db
+    execute_sql(exec_str)
   end
 
   def select(id: nil, limit: nil, offset: nil)
@@ -145,11 +145,11 @@ class Collection
   end
 
   def update(id:, data:, id_expr: '?')
-    query_parts = ["UPDATE #{slug} SET"]
+    query_parts = ["UPDATE \"#{slug}\" SET"]
 
     set_clauses = fields
                   .reject { |f| f.relation_to || f.type == 'password' }
-                  .map { |field| "#{field.name} = ?" }
+                  .map { |field| "'#{field.name}' = ?" }
     values = fields
              .reject { |f| f.relation_to || f.type == 'password' }
              .map do |field|
@@ -163,7 +163,7 @@ class Collection
     end
 
     password_fields_to_update.each do |field|
-      set_clauses << "#{field.name} = ?"
+      set_clauses << "'#{field.name}' = ?"
       values << BCrypt::Password.create(data.fetch(field.name))
     end
 
@@ -202,44 +202,10 @@ class Collection
     values.push(id)
 
     exec_str = query_parts.join("\n")
-    execute_sql(exec_str, vals)
+    execute_sql(exec_str, values)
   end
 
   def delete(id:, id_expr: '?')
     execute_sql("DELETE FROM #{slug} WHERE id = (#{id_expr})", [id])
-  end
-
-  private
-
-  def handle_related_collection_updates(data, parent_id)
-    CMS::Config.collections.each do |collection|
-      relation_fields = fields.select { |f| f.relation_to == collection.slug }
-      relation_fields.each do |field|
-        related_data = data.fetch(field.name, nil)
-
-        if collection.is_a?(Media)
-          is_replaced = data.key?(field.name + '__replaced')
-          if is_replaced
-            # collection.update()
-          end
-        elsif related_data.nil?
-          collection.delete_by_id_expr(
-            id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
-            values: [parent_id]
-          )
-        else
-          collection.update_by_id_expr(
-            data: related_data,
-            id_expr: "SELECT #{field.name} FROM #{slug} WHERE id = ?",
-            values: [parent_id]
-          )
-        end
-      end
-    end
-  end
-
-  def update_parent_with_relation(parent_id, relation_field_name, related_id)
-    exec_str = "UPDATE #{slug} SET #{relation_field_name} = ? WHERE id = ?"
-    execute_sql(exec_str, [related_id, parent_id])
   end
 end

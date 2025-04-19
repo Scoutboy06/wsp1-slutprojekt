@@ -17,23 +17,24 @@ class Field
       required: hash[:required] || false,
       default: hash[:default],
       relation_to: hash[:relation_to],
-      admin_visible: hash[:admin_visible] == nil ? true : hash[:admin_visible],
+      admin_visible: hash[:admin_visible].nil? ? true : hash[:admin_visible]
     )
   end
 
   def get_sql_column_string
     parts = []
 
-    parts << @name
+    parts << '"' + @name + '"'
     parts << get_sql_type(@type)
-    parts << "NOT NULL" if @required
-    parts << @default if @default
+    parts << 'NOT NULL' if @required
 
-    out = parts.join(" ")
+    parts << "DEFAULT '#{@default.gsub("'", "''")}'" if @default
+
+    out = parts.join(' ')
 
     if @relation_to
       out << " REFERENCES #{@relation_to}(id)"
-      out << " ON DELETE #{@required ? 'CASCACE' : 'SET NULL'}"
+      out << " ON DELETE #{@required ? 'CASCADE' : 'SET NULL'}"
     end
 
     out
@@ -41,15 +42,16 @@ class Field
 end
 
 SQL_TYPES = {
-  "number" => "INTEGER",
-  "string" => "TEXT",
-  "boolean" => "BOOLEAN",
-  "upload" => "INTEGER",
-  "email" => "TEXT",
-  "password" => "TEXT",
+  'number' => 'INTEGER',
+  'string' => 'TEXT',
+  'boolean' => 'BOOLEAN',
+  'upload' => 'INTEGER',
+  'email' => 'TEXT',
+  'password' => 'TEXT'
 }
 
 def get_sql_type(type_str)
   raise "Invalid field type: `#{type_str}`" if SQL_TYPES[type_str].nil?
+
   SQL_TYPES[type_str]
 end
