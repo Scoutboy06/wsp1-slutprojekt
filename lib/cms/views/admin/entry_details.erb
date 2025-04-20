@@ -1,24 +1,17 @@
 <header class="flex items-center w-full gap-6 px-4 py-2">
-  <form
-    class="flex items-center w-48 gap-1 px-2 rounded-sm bg-gray-50"
-  >
+  <form class="flex items-center w-48 gap-1 px-2 rounded-sm bg-gray-50">
     <i class="text-gray-400 icon text-[20px]!">search</i>
-    <input 
+    <input
       type="text"
       placeholder="Search"
       name="q"
       value="<%= params['q'] %>"
-      class="w-full px-1 py-1 text-sm text-gray-600 bg-transparent border-none rounded focus:outline-none placeholder:text-gray-500">
+      class="
+        w-full px-1 py-1 text-sm text-gray-600 bg-transparent border-none rounded
+        focus:outline-none placeholder:text-gray-500
+      "
+    >
   </form>
-  <!-- <p class="text-2xl"><%= @collection.name %></p>
-  <a
-    href="<%= request.path_info + "/new" %>"
-    role="button"
-    aria-label="Create new entry"
-    class="flex p-1 border border-black rounded-full cursor-pointer h-min aspect-square"
-  >
-    <i class="icon">add</i>
-  </a> -->
 </header>
 
 <div class="flex flex-col h-full gap-8 px-8 py-8 overflow-y-auto">
@@ -28,7 +21,12 @@
     </h1>
     <a
       href="<%= request.path_info + "/new" %>"
-      class="flex items-center gap-2 py-2 pl-2 pr-4 text-sm text-white border border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600 bg-gradient-to-b">
+      class="
+        flex items-center gap-2 py-2 pl-2 pr-4 text-sm text-white border
+        border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600
+        bg-gradient-to-b
+      "
+    >
       <i class="icon">add</i>
       Create new entry
     </a>
@@ -54,7 +52,7 @@
               <input type="checkbox">
             </td>
 
-            <% @collection.fields.filter { |it| it.admin_visible }.each do |field|%>
+            <% @collection.fields.select(&:admin_visible).each do |field| %>
               <td class="px-6 py-4 overflow-x-hidden">
                 <% if field.type == "upload" %>
                   <img src="<%= entry[field.name]["url"] %>" class="object-contain h-16">

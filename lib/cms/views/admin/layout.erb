@@ -2,48 +2,74 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title><%= @title ? @title : 'Admin' %></title>
+    <title><%= @title ? @title : "Admin" %></title>
     <link rel="stylesheet" href="/style.css">
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    >
   </head>
   <body>
     <div class="flex">
-      <aside class="flex flex-col justify-between w-64 h-screen py-4 overflow-y-auto text-black bg-white border-r border-gray-200 shrink-0">
+      <aside
+        class="
+          flex flex-col justify-between w-64 h-screen py-4 overflow-y-auto text-black
+          bg-white border-r border-gray-200 shrink-0
+        "
+      >
         <div>
           <% @settings.each_with_index do |setting, i| %>
             <div
-            class="flex flex-col mb-2 group"
-            x-data="{ open: true, toggle() {
-              this.open = !this.open;
-              this.$nextTick(() => {
-              this.$refs.content.style.height = this.open ? this.$refs.content.scrollHeight + 'px' : '0px';
-              })
-              }}"
-              >
-              <button
-              type="button"
-              aria-label="Toggle expansion"
-              class="flex items-center justify-between px-4 py-2 mx-3 text-left rounded cursor-pointer hover:bg-gray-100"
-              @click="toggle()"
+              class="flex flex-col mb-2 group"
+              x-data="{ open: true, toggle() { this.open = !this.open; this.$nextTick(() => { this.$refs.content.style.height = this.open ? this.$refs.content.scrollHeight + 'px' : '0px'; }) }}"
             >
+              <button
+                type="button"
+                aria-label="Toggle expansion"
+                class="
+                  flex items-center justify-between px-4 py-2 mx-3 text-left rounded
+                  cursor-pointer hover:bg-gray-100
+                "
+                @click="toggle()"
+              >
                 <span class="text-gray-600"><%= setting[:name] %></span>
-                <span class="text-gray-600 transition-transform duration-200 transform rotate-180 icon group-has-aria-hidden:rotate-0">expand_more</span>
+                <span
+                  class="
+                    text-gray-600 transition-transform duration-200 transform rotate-180 icon
+                    group-has-aria-hidden:rotate-0
+                  "
+                >expand_more</span>
               </button>
 
               <div
-              x-ref="content"
-              class="flex flex-col overflow-hidden transition-[height]"
-              x-bind:style="open ? 'height: ' + $refs.content.scrollHeight + 'px' : 'height: 0px'"
-              x-bind:aria-hidden="!open"
-            >
+                x-ref="content"
+                class="flex flex-col overflow-hidden transition-[height]"
+                x-bind:style="open ? 'height: ' + $refs.content.scrollHeight + 'px' : 'height: 0px'"
+                x-bind:aria-hidden="!open"
+              >
                 <% setting[:items].each do |item| %>
                   <a
-                    class="flex items-center gap-1 relative px-8 mx-3 py-2 transition-colors rounded text-gray-600 hover:bg-gray-100<%= @collection && @collection.slug == item.slug ? " text-orange-600 before:content-[''] before:bg-orange-600 before:w-4 before:absolute before:-left-6 before:top-1.5 before:bottom-1.5 before:rounded-md" : '' %>"
+                    class="
+                      flex items-center gap-1 relative px-8 mx-3 py-2 transition-colors rounded
+                      text-gray-600 hover:bg-gray-100<%= @collection && @collection.slug == item.slug ? " text-orange-600 before:content-[''] before:bg-orange-600 before:w-4 before:absolute before:-left-6 before:top-1.5 before:bottom-1.5 before:rounded-md" : '' %>
+                    "
                     href="<%= "/admin/#{setting[:slug]}/#{item.slug}" %>"
                   >
                     <i class="text-[20px]! icon"><%= item.icon %></i>
-                    <%= item.name %>
+                    <span><%= item.name %></span>
+                    <% unless item.is_a?(Global) %>
+                      <span
+                        class="
+                          ml-auto bg-gray-100 min-w-6 px-2 py-1 text-gray-700 leading-4 rounded-full
+                        "
+                      >
+                        <%= @entry_count[item.slug] || "0" %>
+                      </span>
+                    <% end %>
                   </a>
                 <% end %>
               </div>
@@ -53,10 +79,13 @@
 
         <% if is_signed_in? %>
           <div class="flex items-center gap-2 pt-2 mx-3 border-t border-gray-200">
-            <img src="https://ui-avatars.com/api/?background=f3f4f6&length=1&name=<%= @user['username'] %>" class="w-10 h-10 rounded-full">
+            <img
+              src="https://ui-avatars.com/api/?background=f3f4f6&length=1&name=<%= @user['username'] %>"
+              class="w-10 h-10 rounded-full"
+            >
             <div class="flex flex-col">
-              <p class="font-bold"><%= @user['username'] %></p>
-              <p class="text-sm text-gray-400"><%= @user['email'] %></p>
+              <p class="font-bold"><%= @user["username"] %></p>
+              <p class="text-sm text-gray-400"><%= @user["email"] %></p>
             </div>
           </div>
         <% end %>

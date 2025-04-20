@@ -3,6 +3,7 @@ require_relative '../lib'
 require_relative '../models/media'
 require_relative '../models/collection'
 require_relative '../models/global'
+require_relative '../utils/count_entries'
 
 class AdminController < Sinatra::Base
   configure do
@@ -51,6 +52,8 @@ class AdminController < Sinatra::Base
     @settings = []
     @settings << { name: 'Collections', slug: 'collections', items: @collections } unless @collections.nil?
     @settings << { name: 'Globals', slug: 'globals', items: @globals } unless @collections.nil?
+
+    @entry_count = count_entries(db: @db)
   end
 
   # @method GET
