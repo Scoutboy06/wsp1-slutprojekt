@@ -33,7 +33,7 @@ class Collection
       new(
         name: hash[:name],
         slug: hash[:slug],
-        fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+        fields: hash[:fields]&.map { |f| Field.from_hash(f, hash[:slug]) } || [],
         icon: hash[:icon]
       )
     end
@@ -41,10 +41,11 @@ class Collection
 
   def setup_db(db)
     @db = db
+    fields.each(&:create_sql_table)
     field_strs = ['"id" INTEGER PRIMARY KEY AUTOINCREMENT']
-    field_strs.push(*fields.map(&:get_sql_column_string))
+    field_strs.push(*fields.map(&:get_sql_column_string).compact)
 
-    exec_str = "CREATE TABLE IF NOT EXISTS #{@slug} (\n#{field_strs.join(",\n")}\n);"
+    exec_str = "CREATE TABLE IF NOT EXISTS \"#{@slug}\" (\n#{field_strs.join(",\n")}\n);"
 
     execute_sql(exec_str)
   end
@@ -141,8 +142,32 @@ class Collection
   end
 
   def insert(data)
-    exec_str, values = build_insert_query(slug, fields, data)
+    parts = ["INSERT INTO \"#{slug}\""]
+    deferred_inserts = []
+
+    field_names = []
+    values = []
+    @fields.each do |field|
+      value, should_include = field.handle_insert(data)
+      if should_include == :defer_insert
+        deferred_inserts << [field, value]
+      elsif should_include
+        field_names << "\"#{field.name}\""
+        values << value
+      end
+    end
+
+    parts << "(#{field_names.join(', ')})"
+    parts << 'VALUES'
+    parts << "(#{field_names.map { |_f| '?' }.join(',')})"
+
+    exec_str = parts.join("\n")
     execute_sql(exec_str, values)
+
+    parent_id = @db.last_insert_row_id
+    deferred_inserts.each do |field, items|
+      field.handle_deferred_insert(items, parent_id)
+    end
   end
 
   def update(id:, data:, id_expr: '?')

@@ -6,7 +6,7 @@ class PasswordField < Field
     @type = 'password'
   end
 
-  def self.from_hash(hash)
+  def self.from_hash(hash, _parent_slug = nil)
     new(
       name: hash[:name],
       required: hash[:required],
@@ -15,9 +15,16 @@ class PasswordField < Field
   end
 
   def get_sql_column_string
-    sql = "\"{@name}\" TEXT"
+    sql = "\"#{@name}\" TEXT"
     sql += ' NOT NULL' if @required
     sql
+  end
+
+  def handle_insert(hash)
+    value = hash.fetch(@name, nil)
+    return [nil, true] if value.nil?
+
+    [BCrypt::Password.create(value), true]
   end
 
   def handle_update(record, value)

@@ -6,7 +6,7 @@ class EmailField < Field
     @type = 'email'
   end
 
-  def self.from_hash(hash)
+  def self.from_hash(hash, _parent_slug = nil)
     new(
       name: hash[:name],
       required: hash[:required],

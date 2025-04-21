@@ -20,6 +20,10 @@ module CMS
     CMS::Config.collections.find { |col| col.slug == slug }
   end
 
+  def self.media_collection
+    CMS::Config.collections.find { |col| col.is_a?(Media) }
+  end
+
   def self.global(slug)
     CMS::Config.globals.find { |col| col.slug == slug }
   end

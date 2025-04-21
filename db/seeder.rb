@@ -20,6 +20,7 @@ class Seeder
     end
 
     CMS::Config.load
+    db = CMS::Config.db
     movies = CMS.collection('movies')
     media = CMS.collection('media')
     users = CMS.collection('users')
@@ -46,7 +47,7 @@ class Seeder
     ]
     genres_ids = genres_data.map do |genre|
       genres.insert(genre)
-      CMS.db.last_insert_row_id
+      db.last_insert_row_id
     end
 
     movies.insert({
@@ -55,7 +56,7 @@ class Seeder
       "tmdb_id" => "13-forrest-gump",
       "poster" => get_seeder_media('forrest_gump_poster.jpg'),
       "backdrop" => get_seeder_media('forrest_gump_backdrop.jpg'),
-      "genres" => genres_ids[0..2]
+      "genres" => genres_ids[0..2].map { |id| { "genre" => id } }
     })
 
     movies.insert({
@@ -64,7 +65,7 @@ class Seeder
       "tmdb_id" => "129",
       "poster" => get_seeder_media('spirited_away_poster.jpg'),
       "backdrop" => get_seeder_media('spirited_away_backdrop.jpg'),
-      "genres" => genres_ids[3..12]
+      "genres" => genres_ids[3..12].map { |id| { "genre" => id } }
     })
 
     users.insert({

@@ -1,4 +1,7 @@
+require_relative '../utils/db_helpers'
+
 class Field
+  include DatabaseOperations
   attr_reader :name, :required, :default, :admin_visible
 
   def initialize(name:, required: false, default: nil, admin_visible: true)
@@ -6,9 +9,10 @@ class Field
     @required = required
     @default = default
     @admin_visible = admin_visible
+    @db = CMS::Config.db
   end
 
-  def self.from_hash(hash)
+  def self.from_hash(hash, parent_slug = nil)
     type = hash[:type]
     field_class = case type
                   when 'number' then NumberField
@@ -21,7 +25,7 @@ class Field
                   when 'relation' then RelationField
                   else raise "Invalid field type: `#{type}` for field `#{hash[:name]}`"
                   end
-    field_class.from_hash(hash)
+    field_class.from_hash(hash, parent_slug)
   end
 
   def get_base_sql_column_string
@@ -32,12 +36,28 @@ class Field
     parts.join(' ')
   end
 
+  # To be overridden by subclasses if they need to create a table
+  # The default implementation does nothing.
+  def create_sql_table; end
+
   # To be overridden by subclasses if they need custom column definitions
   def get_sql_column_string
     get_base_sql_column_string
   end
 
+  # To be overridden by subclasses if they need to handle updates.
+  # Either returns a value to be inserted in an INSERT statement, or executes a custom SQL statement.
+  # The default implementation returns the value to be inserted.
+  # @return [String, Boolean] The value to be inserted in the database and a boolean indicating whether to insert it.
+  def handle_insert(hash)
+    [hash.fetch(@name, nil), true]
+  end
+
+  def handle_deferred_insert(_items, _parent_id)
+    raise NotImplementedError, 'Subclasses that use deferred insert must implement handle_deferred_insert'
+  end
+
   def handle_update(record, value)
-    raise NotImplementedError, "Subclasses must implement handle_update"
+    raise NotImplementedError, 'Subclasses must implement handle_update'
   end
 end

@@ -6,7 +6,7 @@ class StringField < Field
     @type = 'string'
   end
 
-  def self.from_hash(hash)
+  def self.from_hash(hash, _parent_slug = nil)
     new(
       name: hash[:name],
       required: hash[:required],
@@ -16,7 +16,7 @@ class StringField < Field
   end
 
   def get_sql_column_string
-    sql = "\"#{@name}\""
+    sql = "\"#{@name}\" TEXT"
     sql += ' NOT NULL' if @required
     sql += " DEFAULT '#{@default.gsub("'", "''")}'" if @default
     sql

@@ -23,30 +23,6 @@ module DatabaseOperations
     [exec_str, [id, limit, offset].compact]
   end
 
-  def build_insert_query(slug, fields, data)
-    field_names = fields.map(&:name)
-    field_values = fields.map do |field|
-      value = data.fetch(field.name, nil)
-
-      if field.relation_to && value
-        relation_col = CMS::Config.collections.find { |c| c.slug == field.relation_to }
-        relation_col.insert(value)
-        @db.last_insert_row_id
-      else
-        case field.type
-        when 'boolean'
-          [true, 'on'].include?(value) ? 1 : 0
-        when 'password'
-          BCrypt::Password.create(value) if value
-        else
-          value
-        end
-      end
-    end
-    exec_str = "INSERT INTO #{slug} (#{field_names.join(', ')}) VALUES (#{(['?'] * field_names.count).join(',')})"
-    [exec_str, field_values]
-  end
-
   def build_update_query(slug, fields, data, id:, id_expr: '?')
     query_parts = ["UPDATE \"#{slug}\" SET"]
     set_clauses = fields
