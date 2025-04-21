@@ -6,98 +6,91 @@
       placeholder="Search"
       name="q"
       value="<%= params['q'] %>"
-      class="
-        w-full px-1 py-1 text-sm text-gray-600 bg-transparent border-none rounded
-        focus:outline-none placeholder:text-gray-500
-      "
+      class="w-full px-1 py-1 text-sm text-gray-600 bg-transparent border-none rounded focus:outline-none placeholder:text-gray-500"
     >
-  </form>
-</header>
+    </form>
+  </header>
 
-<div class="flex flex-col h-full gap-8 px-8 py-8 overflow-y-auto">
-  <div class="flex items-center justify-between pb-4 border-b border-gray-200">
-    <h1 class="text-2xl font-bold text-gray-800">
-      <%= @collection.name %>
-    </h1>
-    <a
+  <div class="flex flex-col h-full gap-8 px-8 py-8 overflow-y-auto">
+    <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+      <h1 class="text-2xl font-bold text-gray-800">
+        <%= @collection.name %>
+      </h1>
+      <a
       href="<%= request.path_info + "/new" %>"
-      class="
-        flex items-center gap-2 py-2 pl-2 pr-4 text-sm text-white border
-        border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600
-        bg-gradient-to-b
-      "
+      class="flex items-center gap-2 py-2 pl-2 pr-4 text-sm text-white border border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600 bg-gradient-to-b"
     >
-      <i class="icon">add</i>
-      Create new entry
-    </a>
-  </div>
+        <i class="icon">add</i>
+        Create new entry
+      </a>
+    </div>
 
-  <div class="overflow-x-auto">
-    <table class="w-full border-spacing-2">
-      <thead class="text-sm text-left text-gray-700 uppercase bg-gray-50">
-        <tr>
-          <th class="py-3 pl-3">
-            <input type="checkbox">
-          </th>
-          <% @collection.fields.select(&:admin_visible).each do |field| %>
-            <th class="px-6 py-3"><%= field.name %></th>
-          <% end %>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @entries.each do |entry| %>
-          <tr class="border-gray-200 [&:not(:last-child)]:border-b">
-            <td class="py-4 pl-3">
+    <div class="overflow-x-auto">
+      <table class="w-full border-spacing-2">
+        <thead class="text-sm text-left text-gray-700 uppercase bg-gray-50">
+          <tr>
+            <th class="py-3 pl-3">
               <input type="checkbox">
-            </td>
-
+            </th>
             <% @collection.fields.select(&:admin_visible).each do |field| %>
-              <td class="px-6 py-4 overflow-x-hidden">
-                <% if field.type == "upload" %>
-                  <img src="<%= entry[field.name]["url"] %>" class="object-contain h-16">
-                <% else %>
-                  <%= entry[field.name] %>
-                <% end %>
-              </td>
+              <th class="px-6 py-3"><%= field.name %></th>
             <% end %>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @entries.each do |entry| %>
+            <tr class="border-gray-200 [&:not(:last-child)]:border-b">
+              <td class="py-4 pl-3">
+                <input type="checkbox">
+              </td>
 
-            <td class="flex gap-4 px-6 py-4">
-              <a
+              <% @collection.fields.select(&:admin_visible).each do |field| %>
+                <td class="px-6 py-4 overflow-x-hidden">
+                  <% if field.is_a?(UploadField) && !entry[field.name].nil? %>
+                    <img src="<%= entry[field.name]["url"] %>" class="object-contain h-16">
+                  <% else %>
+                    <%= entry[field.name] %>
+                  <% end %>
+                </td>
+              <% end %>
+
+              <td class="flex gap-4 px-6 py-4">
+                <a
                 href="<%= request.path_info %>/<%= entry["id"] %>/edit"
                 class="text-blue-600 hover:underline"
               >Edit</a>
-              <button
+                <button
                 type="button"
                 class="text-red-600 cursor-pointer delete-btn hover:underline"
                 data-item-id="<%= entry["id"] %>"
               >Delete</button>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const deleteBtns = document.getElementsByClassName('delete-btn');
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const deleteBtns = document.getElementsByClassName('delete-btn');
 
-    async function sendDeleteRequest(id) {
-      const url = location.href.replace('/admin/', '/api/') + '/' + id
-      const res = await fetch(url, { method: 'DELETE' });
-      if(res.ok) {
-        location.reload();
-      } else {
-        alert("Error 500: Internal server error");
+      async function sendDeleteRequest(id) {
+        const url = location.href.replace('/admin/', '/api/') + '/' + id
+        const res = await fetch(url, { method: 'DELETE' });
+        if(res.ok) {
+          location.reload();
+        } else {
+          alert("Error 500: Internal server error");
+        }
       }
-    }
 
-    for(const btn of deleteBtns) {
-      btn.addEventListener('click', () => {
-        sendDeleteRequest(btn.getAttribute('data-item-id'));
-      });
-    }
-  })
-</script>
+      for(const btn of deleteBtns) {
+        btn.addEventListener('click', () => {
+          sendDeleteRequest(btn.getAttribute('data-item-id'));
+        });
+      }
+    })
+  </script>

@@ -18,7 +18,7 @@ class ArrayField < Field
   def self.from_hash(hash, parent_slug)
     new(
       name: hash[:name],
-      fields: hash[:fields]&.map { |f| Field.from_hash(f) } || [],
+      fields: hash[:fields]&.map { |f| Field.from_hash(f, parent_slug) } || [],
       # TODO: default: hash[:default],
       admin_visible: hash[:admin_visible],
       parent_slug: parent_slug
@@ -37,7 +37,7 @@ class ArrayField < Field
     parts << ');'
 
     sql = parts.join("\n")
-    execute_sql(sql, debug: true)
+    execute_sql(sql)
   end
 
   def get_sql_column_string
@@ -54,13 +54,14 @@ class ArrayField < Field
   end
 
   def handle_deferred_insert(items, parent_id)
-    items.each do |value|
+    items.each do |item|
       parts = ["INSERT INTO \"#{@table_name}\""]
 
       field_names = ["\"#{@parent_field.name}\""]
       values = [parent_id]
       @fields.each do |field|
-        insert_value, should_include = field.handle_insert(value)
+        field_value = item.fetch(field.name, nil)
+        insert_value, should_include = field.handle_insert(field_value)
         if should_include
           field_names << field.name
           values << insert_value
@@ -72,9 +73,22 @@ class ArrayField < Field
       parts << "(#{field_names.map { |_f| '?' }.join(',')})"
 
       exec_str = parts.join("\n")
-      execute_sql(exec_str, values, debug: true)
+      execute_sql(exec_str, values)
     end
 
     [nil, false]
+  end
+
+  def fetch_nested_data(parent_id)
+    sql = "SELECT * FROM \"#{@table_name}\" WHERE \"#{@parent_field.name}\" = ?"
+    items = execute_sql(sql, [parent_id])
+
+    items.map do |item|
+      result = {}
+      @fields.each do |field|
+        result[field.name] = field.fetch_nested_data(item['id']) || item[field.name]
+      end
+      result
+    end
   end
 end

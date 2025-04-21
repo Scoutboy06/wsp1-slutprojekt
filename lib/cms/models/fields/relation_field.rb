@@ -22,7 +22,33 @@ class RelationField < Field
     "\"#{name}\" INTEGER REFERENCES \"#{@relation_to}\"(id) ON DELETE #{@required ? 'CASCADE' : 'SET NULL'}"
   end
 
+  def handle_insert(value)
+    return [nil, true] if value.nil?
+
+    # If we receive a hash, it's a new record to create
+    if value.is_a?(Hash)
+      relation_col = CMS.find_by_slug(@relation_to)
+      relation_col.insert(value)
+      [CMS::Config.db.last_insert_row_id, true]
+    # If we receive an integer, it's an existing record ID
+    elsif value.is_a?(Integer)
+      [value, true]
+    else
+      raise ArgumentError, "Invalid value for relation field #{@name}: #{value.inspect}"
+    end
+  end
+
   def handle_update(record, value)
     puts "Update relation field #{record}.#{@name} with value: #{value}"
+  end
+
+  def fetch_nested_data(parent_id)
+    sql = "SELECT * FROM \"#{@relation_to}\" WHERE \"#{@name}\" = ?"
+    result = execute_sql(sql, parent_id).first
+    related_id = result&.fetch(@name)
+    return nil unless related_id
+
+    related_collection = CMS.find_by_slug(@relation_to)
+    related_collection.nested_select(id: related_id).first
   end
 end

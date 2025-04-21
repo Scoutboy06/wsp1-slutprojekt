@@ -12,7 +12,7 @@ class Field
     @db = CMS::Config.db
   end
 
-  def self.from_hash(hash, parent_slug = nil)
+  def self.from_hash(hash, parent_slug)
     type = hash[:type]
     field_class = case type
                   when 'number' then NumberField
@@ -25,7 +25,16 @@ class Field
                   when 'relation' then RelationField
                   else raise "Invalid field type: `#{type}` for field `#{hash[:name]}`"
                   end
-    field_class.from_hash(hash, parent_slug)
+
+    # Extract common parameters with defaults
+    common_params = {
+      name: hash[:name],
+      required: hash[:required] || false,
+      default: hash[:default],
+      admin_visible: hash.fetch(:admin_visible, true) # Use fetch with default
+    }
+
+    field_class.from_hash(common_params.merge(hash), parent_slug)
   end
 
   def get_base_sql_column_string
@@ -55,6 +64,13 @@ class Field
 
   def handle_deferred_insert(_items, _parent_id)
     raise NotImplementedError, 'Subclasses that use deferred insert must implement handle_deferred_insert'
+  end
+
+  # Default implementation for fetching nested data
+  # @param parent_id [Integer] The ID of the parent record
+  # @return [nil] Returns nil by default, subclasses should override this method if needed.
+  def fetch_nested_data(_parent_id)
+    nil
   end
 
   def handle_update(record, value)
