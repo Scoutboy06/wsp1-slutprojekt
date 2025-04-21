@@ -1,4 +1,4 @@
-require_relative '../models/field'
+require_relative '../models/models'
 require_relative '../lib'
 
 module DatabaseOperations

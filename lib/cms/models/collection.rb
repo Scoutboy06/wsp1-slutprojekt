@@ -1,4 +1,4 @@
-require_relative './field'
+require_relative './fields/all_fields'
 require_relative '../utils/db_helpers'
 require_relative '../lib'
 

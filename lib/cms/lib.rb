@@ -1,10 +1,7 @@
-require_relative 'controllers/admin_controller'
-require_relative 'controllers/api_controller'
-require_relative 'controllers/auth_controller'
-require_relative 'models/collection'
-require_relative 'models/global'
-require_relative 'models/user'
-require_relative 'models/media'
+require_relative './models/models'
+require_relative './controllers/admin_controller'
+require_relative './controllers/api_controller'
+require_relative './controllers/auth_controller'
 
 module CMS
   AdminRoutes = ::AdminController

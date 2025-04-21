@@ -38,8 +38,20 @@ COLLECTIONS = [
       { name: 'title', type: 'string', required: true },
       { name: 'description', type: 'string' },
       { name: 'tmdb_id', type: 'string' },
-      { name: 'poster', type: 'upload', relation_to: 'media' },
-      { name: 'backdrop', type: 'upload', relation_to: 'media' }
+      { name: 'poster', type: 'upload' },
+      { name: 'backdrop', type: 'upload' },
+      { name: 'genres', type: 'array', fields: [
+        { name: 'genre', type: 'relation', relation_to: 'genres' }
+      ]}
+    ]
+  },
+  {
+    name: "Genres",
+    slug: "genres",
+    icon: "label",
+    fields: [
+      { name: 'name', type: 'string', required: true },
+      { name: 'slug', type: 'string', required: true },
     ]
   }
 ]

@@ -20,12 +20,34 @@ class Seeder
     end
 
     CMS::Config.load
-    movies = CMS::Config.collections.find { |col| col.slug == "movies" }
-    media = CMS::Config.collections.find { |col| col.slug == "media" }
-    users = CMS::Config.collections.find { |col| col.slug == "users" }
+    movies = CMS.collection('movies')
+    media = CMS.collection('media')
+    users = CMS.collection('users')
+    genres = CMS.collection('genres')
     raise "Movies collection not found" if movies.nil?
     raise "Media collection not found" if media.nil?
     raise "Users collection not found" if users.nil?
+    raise "Genres collection not found" if genres.nil?
+
+    genres_data = [
+      { "name" => "Epic", "slug" => "epic" },
+      { "name" => "Drama", "slug" => "drama" },
+      { "name" => "Romance", "slug" => "romance" },
+      { "name" => "Anime", "slug" => "anime" },
+      { "name" => "Coming-of-Age", "slug" => "coming-of-age" },
+      { "name" => "Fairy Tale", "slug" => "fairy-tale" },
+      { "name" => "Hand-Drawn Animation", "slug" => "hand-drawn-animation" },
+      { "name" => "Quest", "slug" => "quest" },
+      { "name" => "Supernatural Fantasy", "slug" => "supernatural-fantasy" },
+      { "name" => "Adventure", "slug" => "adventure" },
+      { "name" => "Animation", "slug" => "animation" },
+      { "name" => "Family", "slug" => "family" },
+      { "name" => "Fantasy", "slug" => "fantasy" },
+    ]
+    genres_ids = genres_data.map do |genre|
+      genres.insert(genre)
+      CMS.db.last_insert_row_id
+    end
 
     movies.insert({
       "title" => "Forrest Gump",
@@ -33,6 +55,7 @@ class Seeder
       "tmdb_id" => "13-forrest-gump",
       "poster" => get_seeder_media('forrest_gump_poster.jpg'),
       "backdrop" => get_seeder_media('forrest_gump_backdrop.jpg'),
+      "genres" => genres_ids[0..2]
     })
 
     movies.insert({
@@ -41,6 +64,7 @@ class Seeder
       "tmdb_id" => "129",
       "poster" => get_seeder_media('spirited_away_poster.jpg'),
       "backdrop" => get_seeder_media('spirited_away_backdrop.jpg'),
+      "genres" => genres_ids[3..12]
     })
 
     users.insert({

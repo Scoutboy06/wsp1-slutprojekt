@@ -1,57 +1,43 @@
 class Field
-  attr_reader :name, :type, :required, :default, :relation_to, :fields, :admin_visible
+  attr_reader :name, :required, :default, :admin_visible
 
-  def initialize(name:, type:, required: false, default: nil, relation_to: nil, admin_visible: true)
+  def initialize(name:, required: false, default: nil, admin_visible: true)
     @name = name
-    @type = type
     @required = required
     @default = default
-    @relation_to = relation_to
     @admin_visible = admin_visible
   end
 
   def self.from_hash(hash)
-    new(
-      name: hash[:name],
-      type: hash[:type],
-      required: hash[:required] || false,
-      default: hash[:default],
-      relation_to: hash[:relation_to],
-      admin_visible: hash[:admin_visible].nil? ? true : hash[:admin_visible]
-    )
+    type = hash[:type]
+    field_class = case type
+                  when 'number' then NumberField
+                  when 'string' then StringField
+                  when 'boolean' then BooleanField
+                  when 'upload' then UploadField
+                  when 'email' then EmailField
+                  when 'password' then PasswordField
+                  when 'array' then ArrayField
+                  when 'relation' then RelationField
+                  else raise "Invalid field type: `#{type}` for field `#{hash[:name]}`"
+                  end
+    field_class.from_hash(hash)
   end
 
-  def get_sql_column_string
+  def get_base_sql_column_string
     parts = []
-
-    parts << '"' + @name + '"'
-    parts << get_sql_type(@type)
+    parts << "\"#{@name}\""
     parts << 'NOT NULL' if @required
-
     parts << "DEFAULT '#{@default.gsub("'", "''")}'" if @default
-
-    out = parts.join(' ')
-
-    if @relation_to
-      out << " REFERENCES #{@relation_to}(id)"
-      out << " ON DELETE #{@required ? 'CASCADE' : 'SET NULL'}"
-    end
-
-    out
+    parts.join(' ')
   end
-end
 
-SQL_TYPES = {
-  'number' => 'INTEGER',
-  'string' => 'TEXT',
-  'boolean' => 'BOOLEAN',
-  'upload' => 'INTEGER',
-  'email' => 'TEXT',
-  'password' => 'TEXT'
-}
+  # To be overridden by subclasses if they need custom column definitions
+  def get_sql_column_string
+    get_base_sql_column_string
+  end
 
-def get_sql_type(type_str)
-  raise "Invalid field type: `#{type_str}`" if SQL_TYPES[type_str].nil?
-
-  SQL_TYPES[type_str]
+  def handle_update(record, value)
+    raise NotImplementedError, "Subclasses must implement handle_update"
+  end
 end
