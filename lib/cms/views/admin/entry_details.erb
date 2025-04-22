@@ -57,14 +57,15 @@
 
               <td class="flex gap-4 px-6 py-4">
                 <a
-                href="<%= request.path_info %>/<%= entry["id"] %>/edit"
-                class="text-blue-600 hover:underline"
-              >Edit</a>
-                <button
-                type="button"
-                class="text-red-600 cursor-pointer delete-btn hover:underline"
-                data-item-id="<%= entry["id"] %>"
-              >Delete</button>
+                  href="<%= request.path_info %>/<%= entry["id"] %>/edit"
+                  class="text-blue-600 hover:underline"
+                >Edit</a>
+                <form action="<%= request.path_info %>/<%= entry["id"] %>/delete" method="POST">
+                  <button
+                    type="submit"
+                    class="text-red-600 cursor-pointer hover:underline"
+                  >Delete</button>
+                </form>
               </td>
             </tr>
           <% end %>
@@ -72,25 +73,3 @@
       </table>
     </div>
   </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const deleteBtns = document.getElementsByClassName('delete-btn');
-
-      async function sendDeleteRequest(id) {
-        const url = location.href.replace('/admin/', '/api/') + '/' + id
-        const res = await fetch(url, { method: 'DELETE' });
-        if(res.ok) {
-          location.reload();
-        } else {
-          alert("Error 500: Internal server error");
-        }
-      }
-
-      for(const btn of deleteBtns) {
-        btn.addEventListener('click', () => {
-          sendDeleteRequest(btn.getAttribute('data-item-id'));
-        });
-      }
-    })
-  </script>

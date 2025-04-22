@@ -249,4 +249,13 @@ class AdminController < Sinatra::Base
     status 201
     redirect "/admin/globals/#{@setting.slug}/edit"
   end
+
+  post '/admin/collections/:slug/:id/delete' do |slug, id|
+    @collection = @collections.find { |c| c.slug == slug }
+    halt 404 if @collection.nil?
+
+    @collection.delete(id: id)
+
+    redirect "/admin/collections/#{slug}"
+  end
 end
