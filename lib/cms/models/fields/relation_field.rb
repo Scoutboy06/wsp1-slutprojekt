@@ -43,12 +43,15 @@ class RelationField < Field
   end
 
   def fetch_nested_data(parent_id)
-    sql = "SELECT * FROM \"#{@relation_to}\" WHERE \"#{@name}\" = ?"
-    result = execute_sql(sql, parent_id).first
-    related_id = result&.fetch(@name)
-    return nil unless related_id
+    sql = "SELECT * FROM \"#{@relation_to}\" WHERE id = ?"
+    result = execute_sql(sql, [parent_id]).first
 
-    related_collection = CMS.find_by_slug(@relation_to)
-    related_collection.nested_select(id: related_id).first
+    relation_col = CMS.find_by_slug(@relation_to)
+    relation_col.fields.each do |field|
+      nested_data = field.fetch_nested_data(result[field.name])
+      result[field.name] = nested_data if nested_data
+    end
+
+    result
   end
 end

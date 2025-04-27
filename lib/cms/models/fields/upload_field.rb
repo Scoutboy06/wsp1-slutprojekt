@@ -33,7 +33,7 @@ class UploadField < Field
 
   def fetch_nested_data(parent_id)
     sql = "SELECT * FROM \"#{CMS.media_collection.slug}\" WHERE id = (SELECT \"#{@name}\" FROM \"#{@parent_slug}\" WHERE id = ?)"
-    execute_sql(sql, [parent_id], debug: true).first
+    execute_sql(sql, [parent_id]).first
   end
 
   def handle_update(record, _value)

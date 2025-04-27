@@ -14,44 +14,56 @@
     method="POST"
     class="flex flex-col gap-8 mt-8"
   >
-    <% @collection.fields.each do |field| %>
-      <%= partial "components/_form_field",
-      locals: {
-        field: field,
-        value: @entry[field.name],
-        mode: :edit,
-      } %>
-    <% end %>
+    <div id="form-fields"></div>
 
     <button
       type="submit"
       class="px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600 bg-gradient-to-b"
     >Update</button>
   </form>
+
+  <%= partial 'components/_field_templates' %>
 </div>
 
 <script>
-  document.addEventListener('alpine:init', () => {
-    const initialPreviews = {<%=
+  const initialData = <%= @entry.to_json %>;
+  const fieldTypes = <%= get_field_types_json(@collection) %>;
+  const mode = 'edit';
+
+  const initialPreviews = {<%=
+    @collection.fields
+      .select { |field| field.type == "upload" && @entry[field.name]['url'] }
+      .map do |field|
+        nested_field = @entry[field.name]
+        "\"#{field.name}\":" + {
+          name: nested_field["file_name"],
+          size: nil,
+          dimensions: nested_field["width"] && nested_field["height"] ?
+            "#{nested_field["width"]} x #{nested_field["height"]}":
+            nil,
+          preview: nested_field["url"],
+        }.to_json
+      end
+      .join(", ")
+  %>};
+
+  const initialArrayValues = {
+    <%=
       @collection.fields
-        .select { |field| field.type == "upload" && !!@entry[field.name]['url'] }
+        .select { |field| field.type == "array" }
         .map do |field|
-          nested_field = @entry[field.name]
-          "\"#{field.name}\":" + {
-            name: nested_field["file_name"],
-            size: nil,
-            dimensions: nested_field["width"] && nested_field["height"] ?
-              "#{nested_field["width"]} x #{nested_field["height"]}":
-              nil,
-            preview: nested_field["url"],
-          }.to_json
+          "\"#{field.name}\":" + @entry[field.name].to_json
         end
         .join(", ")
-    %>};
+    %>
+  };
 
+  document.addEventListener('alpine:init', () => {
     Alpine.data('formHandler', () => ({
       deletedFiles: new Set(),
       filePreviews: Object.assign({}, initialPreviews),
+      arrayValues: Object.assign({}, initialArrayValues),
+      mode,
 
       handleFileUpload(e, fieldName) {
         const file = e.target.files[0];
@@ -87,5 +99,5 @@
         }
       },
     }))
-  })
+  });
 </script>

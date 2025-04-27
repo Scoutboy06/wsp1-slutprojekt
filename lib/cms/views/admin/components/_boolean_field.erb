@@ -1,10 +1,10 @@
 <div class="flex items-center gap-2">
   <input
     type="checkbox"
-    name="<%= field.name %>"
-    id="<%= field.name %>"
+    :name="field.name"
+    :id="field.name"
     class="border border-black"
-    <%= value == 1 ? "checked" : "" %>
+    :checked="value == 1"
   >
-  <label for="<%= field.name %>"><%= field.name %></label>
-</div>
+    <label :for="field.name" x-text="field.name"></label>
+  </div>

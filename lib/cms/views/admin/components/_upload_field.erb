@@ -1,32 +1,29 @@
 <div class="flex flex-col gap-2">
-  <label for="<%= field.name %>">
-    <%= field.name %>
-    <% if field.required %>
-      <span class="text-red-600">*</span>
-    <% end %>
+  <label :for="field.name" x-text="field.name">
+    <span class="text-red-600" x-show="field.required">*</span>
   </label>
   <div class="px-4 py-4 border border-gray-400 rounded">
     <input
       type="file"
-      name="<%= field.name %>"
-      id="<%= field.name %>"
+      :name="field.name"
+      :id="field.name"
       accept="image/*"
-      @change="handleFileUpload($event, '<%= field.name %>')"
+      @change="handleFileUpload($event, field.name)"
     >
       <input
       type="checkbox"
-      name="<%= field.name %>__deleted"
-      id="<%= field.name %>__deleted"
-      x-model="deletedFiles.has('<%= field.name %>')"
+      :name="field.name + '__deleted'"
+      :id="field.name + '__deleted'"
+      x-model="deletedFiles.has(field.name)"
       class="hidden"
     >
-        <template x-if="filePreviews['<%= field.name %>']">
+        <template x-if="filePreviews[field.name]">
           <div class="relative p-2 mt-2 border border-gray-400 rounded">
-            <img :src="filePreviews['<%= field.name %>'].preview" class="w-auto h-20">
-            <p x-text="filePreviews['<%= field.name %>'].name"></p>
-            <p x-text="filePreviews['<%= field.name %>'].size"></p>
-            <p x-text="filePreviews['<%= field.name %>'].dimensions"></p>
-            <button type="button" @click="removeFile('<%= field.name %>')" class="icon">delete</button>
+            <img :src="filePreviews[field.name].preview" class="w-auto h-20">
+            <p x-text="filePreviews[field.name].name"></p>
+            <p x-text="filePreviews[field.name].size"></p>
+            <p x-text="filePreviews[field.name].dimensions"></p>
+            <button type="button" @click="removeFile(field.name)" class="icon">delete</button>
           </div>
         </template>
       </div>

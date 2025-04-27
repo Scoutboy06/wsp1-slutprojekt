@@ -3,7 +3,7 @@ require_relative '../field'
 class ArrayField < Field
   attr_reader :fields
 
-  def initialize(name:, fields:, parent_slug:, default: nil, admin_visible: true)
+  def initialize(name:, fields:, parent_slug:, default: nil, admin_visible: false)
     super(name: name, default: default, admin_visible: admin_visible)
     @fields = fields
     @parent_field = RelationField.new(

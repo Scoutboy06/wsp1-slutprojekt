@@ -2,7 +2,7 @@ require_relative '../utils/db_helpers'
 
 class Field
   include DatabaseOperations
-  attr_reader :name, :required, :default, :admin_visible
+  attr_reader :name, :required, :default, :admin_visible, :type
 
   def initialize(name:, required: false, default: nil, admin_visible: true)
     @name = name

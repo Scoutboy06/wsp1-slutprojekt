@@ -21,6 +21,35 @@ class AdminController < Sinatra::Base
       erb template.to_sym, options.merge!(layout: false)
     end
 
+    def get_field_types_json(collection)
+      p collection
+      puts "Collection name: #{collection.name}"
+      collection.fields.map do |field|
+        if field.type == 'relation'
+          rcol = CMS.collection(field.relation_to)
+          puts "Relation col:"
+          p r_col
+          return get_field_types_json(CMS.collection(field.relation_to))
+        end
+
+        out = {
+          name: field.name,
+          type: field.type,
+          required: field.required,
+          default: field.default
+        }
+        if field.type == 'array'
+          p field.fields
+          out[:fields] = field.fields.map do |f|
+            col = CMS.collection(f.name)
+            # p col
+            get_field_types_json(col)
+          end
+        end
+        out
+      end.to_json
+    end
+
     def is_signed_in?
       return false unless CMS::Auth.enabled
 

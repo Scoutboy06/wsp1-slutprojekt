@@ -49,6 +49,8 @@
                 <td class="px-6 py-4 overflow-x-hidden">
                   <% if field.is_a?(UploadField) && !entry[field.name].nil? %>
                     <img src="<%= entry[field.name]["url"] %>" class="object-contain h-16">
+                  <% elsif field.is_a?(ArrayField) %>
+                    <%= entry[field.name].length %> entries
                   <% else %>
                     <%= entry[field.name] %>
                   <% end %>

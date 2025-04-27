@@ -108,8 +108,6 @@ class Collection
     end
 
     base_data = execute_sql(query_parts.join("\n"), query_values)
-    puts 'Base data:'
-    p base_data
 
     base_data.map do |record|
       fields.each do |field|
@@ -118,64 +116,6 @@ class Collection
       end
       record
     end
-
-    ### end WHERE ###
-
-    # all_collections = CMS::Config.collections
-    # query_parts = []
-    # query_values = []
-
-    # ### start SELECT ###
-    # select_parts = ["#{slug}.*"]
-    # fields_with_relations = fields.select(&:relation_to)
-
-    # fields_with_relations.each do |field|
-    #   field_collection = all_collections.find { |c| c.slug == field.relation_to }
-    #   field_collection.fields.each do |col_field|
-    #     select_parts << "#{field.name}_#{field.relation_to}.#{col_field.name} AS __#{field.name}_#{field.relation_to}_#{col_field.name}"
-    #   end
-    # end
-    # query_parts << "SELECT #{select_parts.join(', ')}"
-    # ### end SELECT ###
-
-    # ### start FROM ###
-    # query_parts << "FROM #{slug}"
-    # ### end FROM ###
-
-    # ### start LEFT JOIN ###
-    # left_join_parts = fields_with_relations.map do |field|
-    #   "LEFT JOIN #{field.relation_to} AS #{field.name}_#{field.relation_to} ON #{slug}.#{field.name} = #{field.name}_#{field.relation_to}.id"
-    # end
-    # query_parts << left_join_parts.join("\n  ")
-    # ### end LEFT JOIN ###
-
-    # ### start WHERE ###
-    # unless id.nil?
-    #   query_parts << "WHERE #{slug}.id = ?"
-    #   query_values << id
-    # end
-    # ### end WHERE ###
-
-    # query_str = query_parts.join("\n")
-    # data = execute_sql(query_str, query_values, debug: true)
-
-    # data.each do |result_item|
-    #   fields_with_relations.each do |field|
-    #     field_hash = {}
-    #     field_collection = all_collections.find { |c| c.slug == field.relation_to }
-
-    #     field_collection.fields.each do |col_field|
-    #       query_name = "__#{field.name}_#{field.relation_to}_#{col_field.name}"
-    #       query_value = result_item[query_name]
-    #       field_hash[col_field.name] = query_value
-    #       result_item.delete(query_name)
-    #     end
-
-    #     result_item[field.name] = field_hash
-    #   end
-    # end
-
-    # data
   end
 
   def insert(data)
