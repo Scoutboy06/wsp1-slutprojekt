@@ -12,3 +12,5 @@ db/*.sqlite
 Thumbs.db
 
 .vscode/
+
+node_modules/

@@ -21,13 +21,13 @@
       class="px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600 bg-gradient-to-b"
     >Update</button>
   </form>
-
-  <%= partial 'components/_field_templates' %>
 </div>
+
+<script src="/admin/lit/fields.js" type="module"></script>
 
 <script>
   const initialData = <%= @entry.to_json %>;
-  const fieldTypes = <%= get_field_types_json(@collection) %>;
+  const fieldTypes = <%= get_field_types(@collection.fields).to_json %>;
   const mode = 'edit';
 
   const initialPreviews = {<%=

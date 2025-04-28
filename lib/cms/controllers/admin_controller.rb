@@ -9,7 +9,7 @@ class AdminController < Sinatra::Base
   configure do
     set :root, File.dirname(__FILE__)
     set :views, File.join(root, '../views/admin')
-    set :public_folder, File.join(root, 'public')
+    set :public_folder, File.join(root, '../public')
   end
 
   helpers do
@@ -21,33 +21,24 @@ class AdminController < Sinatra::Base
       erb template.to_sym, options.merge!(layout: false)
     end
 
-    def get_field_types_json(collection)
-      p collection
-      puts "Collection name: #{collection.name}"
-      collection.fields.map do |field|
-        if field.type == 'relation'
-          rcol = CMS.collection(field.relation_to)
-          puts "Relation col:"
-          p r_col
-          return get_field_types_json(CMS.collection(field.relation_to))
-        end
-
+    def get_field_types(fields)
+      fields.map do |field|
         out = {
           name: field.name,
           type: field.type,
           required: field.required,
           default: field.default
         }
-        if field.type == 'array'
-          p field.fields
-          out[:fields] = field.fields.map do |f|
-            col = CMS.collection(f.name)
-            # p col
-            get_field_types_json(col)
-          end
+
+        if field.type == 'relation'
+          rcol = CMS.collection(field.relation_to)
+          out[:relation_field] = get_field_types(rcol.fields)
+        elsif field.type == 'array'
+          out[:fields] = get_field_types(field.fields)
         end
+
         out
-      end.to_json
+      end
     end
 
     def is_signed_in?
@@ -83,6 +74,10 @@ class AdminController < Sinatra::Base
     @settings << { name: 'Globals', slug: 'globals', items: @globals } unless @collections.nil?
 
     @entry_count = count_entries(db: @db)
+  end
+
+  get '/admin/lit/*' do |path|
+    send_file File.join(settings.public_folder, 'lit', path)
   end
 
   # @method GET
