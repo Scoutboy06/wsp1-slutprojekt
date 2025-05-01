@@ -1,4 +1,4 @@
-<div class="px-4 py-4" x-data='formHandler'>
+<div class="px-4 py-4">
   <a
     href="<%= request.path_info.split("/")[...-2].join("/") %>"
     class="flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer w-min hover:bg-gray-50"
@@ -14,7 +14,7 @@
     method="POST"
     class="flex flex-col gap-8 mt-8"
   >
-    <div id="form-fields"></div>
+    <field-renderer initial-data-name="initialData" field-types-name="fieldTypes" mode="edit"></field-renderer>
 
     <button
       type="submit"
@@ -23,14 +23,12 @@
   </form>
 </div>
 
-<script src="/admin/lit/fields.js" type="module"></script>
-
 <script>
-  const initialData = <%= @entry.to_json %>;
-  const fieldTypes = <%= get_field_types(@collection.fields).to_json %>;
-  const mode = 'edit';
+  var initialData = <%= @entry.to_json %>;
+  var fieldTypes = <%= get_field_types(@collection.fields).to_json %>;
 
-  const initialPreviews = {<%=
+  /*
+  var initialPreviews = {<%=
     @collection.fields
       .select { |field| field.type == "upload" && @entry[field.name]['url'] }
       .map do |field|
@@ -47,7 +45,7 @@
       .join(", ")
   %>};
 
-  const initialArrayValues = {
+  var initialArrayValues = {
     <%=
       @collection.fields
         .select { |field| field.type == "array" }
@@ -57,47 +55,53 @@
         .join(", ")
     %>
   };
+  */
+</script>
 
-  document.addEventListener('alpine:init', () => {
-    Alpine.data('formHandler', () => ({
-      deletedFiles: new Set(),
-      filePreviews: Object.assign({}, initialPreviews),
-      arrayValues: Object.assign({}, initialArrayValues),
-      mode,
+<script src="/admin/lit/fields.js" defer></script>
 
-      handleFileUpload(e, fieldName) {
-        const file = e.target.files[0];
-        if(!file || !file.type.startsWith('image/')) return;
+<script>
+  /*
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('formHandler', () => ({
+        deletedFiles: new Set(),
+        filePreviews: Object.assign({}, initialPreviews),
+        arrayValues: Object.assign({}, initialArrayValues),
 
-        const reader = new FileReader();
+        handleFileUpload(e, fieldName) {
+          const file = e.target.files[0];
+          if(!file || !file.type.startsWith('image/')) return;
 
-        reader.onload = (e) => {
-          const img = new Image();
-          img.src = e.target.result;
+          const reader = new FileReader();
 
-          img.onload = () => {
-            if (initialPreviews[fieldName]) {
-              this.deletedFiles.add(fieldName);
+          reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+
+            img.onload = () => {
+              if (initialPreviews[fieldName]) {
+                this.deletedFiles.add(fieldName);
+              }
+
+              this.filePreviews[fieldName] = {
+                name: file.name,
+                size: (file.size / 1024).toFixed(2) + ' KB',
+                dimensions: `${img.width} x ${img.height}`,
+                preview: e.target.result,
+              };
             }
-
-            this.filePreviews[fieldName] = {
-              name: file.name,
-              size: (file.size / 1024).toFixed(2) + ' KB',
-              dimensions: `${img.width} x ${img.height}`,
-              preview: e.target.result,
-            };
           }
-        }
 
-        reader.readAsDataURL(file);
-      },
+          reader.readAsDataURL(file);
+        },
 
-      removeFile(fieldName) {
-        delete this.filePreviews[fieldName];
-        if (initialPreviews[fieldName]) {
-          this.deletedFiles.add(fieldName);
-        }
-      },
-    }))
-  });
+        removeFile(fieldName) {
+          delete this.filePreviews[fieldName];
+          if (initialPreviews[fieldName]) {
+            this.deletedFiles.add(fieldName);
+          }
+        },
+      }))
+    });
+  */
 </script>
