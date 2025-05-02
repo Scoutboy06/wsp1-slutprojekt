@@ -1,10 +1,7 @@
 <div class="px-4 py-4">
   <a
     href="<%= request.path_info.split("/")[...-2].join("/") %>"
-    class="
-      flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer
-      w-min hover:bg-gray-50
-    "
+    class="flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer  w-min hover:bg-gray-50"
   >
     <i class="icon text-[18px]!">arrow_back</i>
     <span>Back</span>
@@ -25,10 +22,7 @@
 
     <button
       type="submit"
-      class="
-        px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer
-        from-orange-400 to-orange-600 bg-gradient-to-b
-      "
+      class="px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer  from-orange-400 to-orange-600 bg-gradient-to-b"
     >Update</button>
   </form>
 </div>
@@ -36,82 +30,6 @@
 <script>
   var initialData = <%= @entry.to_json %>;
   var fieldTypes = <%= get_field_types(@collection.fields).to_json %>;
-
-  /*
-  var initialPreviews = {<%=
-    @collection.fields
-      .select { |field| field.type == "upload" && @entry[field.name]['url'] }
-      .map do |field|
-        nested_field = @entry[field.name]
-        "\"#{field.name}\":" + {
-          name: nested_field["file_name"],
-          size: nil,
-          dimensions: nested_field["width"] && nested_field["height"] ?
-            "#{nested_field["width"]} x #{nested_field["height"]}":
-            nil,
-          preview: nested_field["url"],
-        }.to_json
-      end
-      .join(", ")
-  %>};
-
-  var initialArrayValues = {
-    <%=
-      @collection.fields
-        .select { |field| field.type == "array" }
-        .map do |field|
-          "\"#{field.name}\":" + @entry[field.name].to_json
-        end
-        .join(", ")
-    %>
-  };
-  */
 </script>
 
 <script src="/admin/lit/fields.js" defer></script>
-
-<script>
-  /*
-    document.addEventListener('alpine:init', () => {
-      Alpine.data('formHandler', () => ({
-        deletedFiles: new Set(),
-        filePreviews: Object.assign({}, initialPreviews),
-        arrayValues: Object.assign({}, initialArrayValues),
-
-        handleFileUpload(e, fieldName) {
-          const file = e.target.files[0];
-          if(!file || !file.type.startsWith('image/')) return;
-
-          const reader = new FileReader();
-
-          reader.onload = (e) => {
-            const img = new Image();
-            img.src = e.target.result;
-
-            img.onload = () => {
-              if (initialPreviews[fieldName]) {
-                this.deletedFiles.add(fieldName);
-              }
-
-              this.filePreviews[fieldName] = {
-                name: file.name,
-                size: (file.size / 1024).toFixed(2) + ' KB',
-                dimensions: `${img.width} x ${img.height}`,
-                preview: e.target.result,
-              };
-            }
-          }
-
-          reader.readAsDataURL(file);
-        },
-
-        removeFile(fieldName) {
-          delete this.filePreviews[fieldName];
-          if (initialPreviews[fieldName]) {
-            this.deletedFiles.add(fieldName);
-          }
-        },
-      }))
-    });
-  */
-</script>
