@@ -1,7 +1,10 @@
 <div class="px-4 py-4">
   <a
     href="<%= request.path_info.split("/")[...-2].join("/") %>"
-    class="flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer w-min hover:bg-gray-50"
+    class="
+      flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer
+      w-min hover:bg-gray-50
+    "
   >
     <i class="icon text-[18px]!">arrow_back</i>
     <span>Back</span>
@@ -14,11 +17,18 @@
     method="POST"
     class="flex flex-col gap-8 mt-8"
   >
-    <field-renderer initial-data-name="initialData" field-types-name="fieldTypes" mode="edit"></field-renderer>
+    <field-renderer
+      initial-data-name="initialData"
+      field-types-name="fieldTypes"
+      mode="edit"
+    ></field-renderer>
 
     <button
       type="submit"
-      class="px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600 bg-gradient-to-b"
+      class="
+        px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer
+        from-orange-400 to-orange-600 bg-gradient-to-b
+      "
     >Update</button>
   </form>
 </div>

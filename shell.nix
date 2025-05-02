@@ -18,5 +18,7 @@ pkgs.mkShell {
     nodePackages."@tailwindcss/language-server"
     emmet-ls
     pkgs.vscode-langservers-extracted
+
+    pnpm
   ];
 }
