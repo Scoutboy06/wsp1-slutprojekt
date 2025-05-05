@@ -6,10 +6,13 @@ require_relative '../lib/cms/lib'
 
 class Seeder
   def self.seed!
+    puts "Deleting database..."
+
     # Delete the SQLite database file
     db_path = File.expand_path('../cms_db.sqlite', __FILE__)
     FileUtils.rm_f(db_path) if File.exist?(db_path)
 
+    puts "Moving images database..."
     # Clean /public/uploads directory except .gitignore
     uploads_dir = File.expand_path('../../public/uploads', __FILE__)
     Dir.foreach(uploads_dir) do |file|
@@ -19,6 +22,7 @@ class Seeder
       FileUtils.rm_rf(path)
     end
 
+    puts "CMS init..."
     CMS::Config.load
     db = CMS::Config.db
     movies = CMS.collection('movies')
@@ -45,6 +49,7 @@ class Seeder
       { "name" => "Family", "slug" => "family" },
       { "name" => "Fantasy", "slug" => "fantasy" },
     ]
+    puts "Inserting data..."
     genres_ids = genres_data.map do |genre|
       genres.insert(genre)
       db.last_insert_row_id
@@ -74,6 +79,8 @@ class Seeder
       "password" => "password",
       "admin" => true,
     })
+
+    puts "Done!"
   end
 
   def self.get_seeder_media(filename)

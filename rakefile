@@ -1,4 +1,4 @@
-task :seed do 
+task :seed do
     require "bundler"
     Bundler.require
     require_relative 'db/seeder'
@@ -6,7 +6,22 @@ task :seed do
 end
 
 task :dev do
-    sh 'bundle exec rerun --ignore "*.{erb,js,css}" --force-polling "rackup --host 0.0.0.0"'
+    sh "bundle exec rackup --host 0.0.0.0"
+
+    # sh "bundle exec rerun --pattern '**/*' --ignore '**/*.{erb,js,css,mjs,ts,json}' --ignore 'node_modules/*' --ignore 'node_modules/**/*' --ignore 'lib/cms/lit-components/*' --ignore 'lib/cms/lit-components/**/*' --force-polling \"rackup --host 0.0.0.0\""
+
+#     sh %q{
+#   bundle exec rerun \
+#     --pattern '**/*' \
+#     --ignore 'node_modules/*' \
+#     --ignore 'node_modules/**/*' \
+#     --ignore '**/*.erb' \
+#     --ignore '**/*.js' \
+#     --ignore '**/*.css' \
+#     --ignore '**/node_modules/**' \
+#     --force-polling \
+#     -- rackup --host 0.0.0.0
+# }
 end
 
 task :run do
