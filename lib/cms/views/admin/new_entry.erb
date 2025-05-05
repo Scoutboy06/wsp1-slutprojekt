@@ -1,10 +1,7 @@
 <div x-data="formHandler" class="px-4 py-4">
   <a
     href="<%= request.path_info.split("/")[...-1].join("/") %>"
-    class="
-      flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer
-      w-min hover:bg-gray-50
-    "
+    class="flex items-center gap-3 px-2 py-1 border border-gray-200 rounded cursor-pointer w-min hover:bg-gray-50"
   >
     <i class="icon text-[18px]!">arrow_back</i>
     <span>Back</span>
@@ -12,61 +9,27 @@
 
   <form
     id="create-form"
-    action="/admin/collections/<%= @setting.slug %>"
+    action="/admin/collections/<%= @collection.slug %>"
     enctype="multipart/form-data"
     method="POST"
     class="flex flex-col gap-8 mt-8"
   >
-    <% @setting.fields.each do |field| %>
-      <%= partial "components/_form_field",
-      locals: {
-        field: field,
-        value: nil,
-        mode: :create,
-      } %>
-    <% end %>
+    <field-renderer
+      initial-data-name="initialData"
+      field-types-name="fieldTypes"
+      mode="create"
+    ></field-renderer>
 
     <button
       type="submit"
-      class="
-        px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer
-        from-orange-400 to-orange-600 bg-gradient-to-b
-      "
+      class="px-4 py-2 text-white border border-orange-700 rounded-lg cursor-pointer from-orange-400 to-orange-600 bg-gradient-to-b"
     >Create</button>
   </form>
 </div>
 
 <script>
-  document.addEventListener('alpine:init', () => {
-    Alpine.data('formHandler', () => ({
-      filePreviews: {},
-
-      handleFileUpload(e, fieldName) {
-        const file = e.target.files[0];
-        if(!file || !file.type.startsWith('image/')) return;
-
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-          const img = new Image();
-          img.src = e.target.result;
-
-          img.onload = () => {
-            this.filePreviews[fieldName] = {
-              name: file.name,
-              size: (file.size / 1024).toFixed(2) + ' KB',
-              dimensions: `${img.width} x ${img.height}`,
-              preview: e.target.result,
-            };
-          }
-        }
-
-        reader.readAsDataURL(file);
-      },
-
-      removeFile(fieldName) {
-        delete this.filePreviews[fieldName];
-      },
-    }))
-  })
+  var initialData = {};
+  var fieldTypes = <%= get_field_types(@collection.fields).to_json %>
 </script>
+
+<script src="/admin/lit/fields.js" defer></script>

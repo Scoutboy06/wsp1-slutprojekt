@@ -132,8 +132,8 @@ class AdminController < Sinatra::Base
   # @return [String] Renders the new entry form (erb :new_entry).
   # @raise [Sinatra::NotFound] Halts with 404 if the collection slug does not exist.
   get '/admin/collections/:slug/new' do |slug|
-    @setting = @collections.find { |c| c.slug == slug }
-    halt 404 if @setting.nil?
+    @collection = @collections.find { |c| c.slug == slug }
+    halt 404 if @collection.nil?
     erb :new_entry
   end
 
