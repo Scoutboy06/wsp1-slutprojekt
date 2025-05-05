@@ -13,7 +13,7 @@ class App < Sinatra::Base
 
   configure do
     CMS::Config.load
-    # CMS::Auth.enabled = true
+    CMS::Auth.enabled = true
     CMS::Auth.admin_column = 'admin'
 
     Rack::Attack.enabled = true
@@ -114,7 +114,7 @@ class App < Sinatra::Base
   end
 
   post '/signup' do
-    _, error = Auth.sign_up(
+    _, error = CMS::Auth.sign_up(
       username: params[:username],
       email: params[:email],
       password: params[:password]
@@ -133,7 +133,7 @@ class App < Sinatra::Base
   # Logs the current user out by clearing their session.
   # @return [void]
   get '/logout' do
-    Auth.sign_out
+    CMS::Auth.sign_out
     redirect '/'
   end
 
@@ -142,6 +142,6 @@ class App < Sinatra::Base
   # Logs the current user out (alternative method, often used with forms).
   # @return [void]
   post '/logout' do
-    Auth.sign_out
+    CMS::Auth.sign_out
   end
 end

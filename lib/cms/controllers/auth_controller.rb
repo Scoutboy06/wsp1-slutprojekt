@@ -80,6 +80,7 @@ class AuthController < Sinatra::Base
 
     user_id = CMS::Config.db.last_insert_row_id
     session[:user_id] = user_id
+    session[:is_admin] = false
 
     [user_id, nil]
   end
