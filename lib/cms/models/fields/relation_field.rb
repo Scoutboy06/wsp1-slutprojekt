@@ -43,8 +43,9 @@ class RelationField < Field
   end
 
   def fetch_nested_data(parent_id)
+    raise "Not supposed to happen"
     sql = "SELECT * FROM \"#{@relation_to}\" WHERE id = ?"
-    result = execute_sql(sql, [parent_id]).first
+    result = execute_sql(sql, [parent_id], debug: true).first
 
     relation_col = CMS.find_by_slug(@relation_to)
     relation_col.fields.each do |field|

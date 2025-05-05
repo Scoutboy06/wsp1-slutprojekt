@@ -13,7 +13,7 @@ class App < Sinatra::Base
 
   configure do
     CMS::Config.load
-    CMS::Auth.enabled = true
+    # CMS::Auth.enabled = true
     CMS::Auth.admin_column = 'admin'
 
     Rack::Attack.enabled = true

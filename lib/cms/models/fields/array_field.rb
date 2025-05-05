@@ -79,16 +79,54 @@ class ArrayField < Field
     [nil, false]
   end
 
-  def fetch_nested_data(parent_id)
-    sql = "SELECT * FROM \"#{@table_name}\" WHERE \"#{@parent_field.name}\" = ?"
-    items = execute_sql(sql, [parent_id])
 
+  def fetch_nested_data(parent_id)
+    result = {}
+
+    non_relation_fields = @fields.reject { |f| f.is_a?(RelationField) }
+    relation_fields = @fields.select { |f| f.is_a?(RelationField) }
+
+    non_relation_fields.each do |field|
+      result[field.name] = field.fetch_nested_data(item['id']) || item[field.name]
+    end
+
+    # We do a LEFT JOIN for relation fields
+
+    # Example query:
+    # SELECT t2.*
+    # FROM "movies__genres__items" AS t1
+    # LEFT JOIN "genres" AS t2
+    # ON t2.id = t1.genre
+    # WHERE t1."movies" = ?;
+
+    query = "SELECT " # Select all columns from the array table
+    selects = []
+    joins = []
+    select_fields = []
+
+    relation_fields.each_with_index do |field, index|
+      alias_name = "t#{index + 2}" # t2, t3, etc.
+      selects << "#{alias_name}.*" # Select all columns from the related table
+      joins << "LEFT JOIN \"#{field.relation_to}\" AS #{alias_name} ON #{alias_name}.id = t1.#{field.name}"
+      select_fields << field.name
+    end
+
+    query += selects.join(' ') if selects.any?
+    query += " FROM \"#{@table_name}\" AS t1 "
+    query += joins.join(' ')
+    query += " WHERE t1.\"#{@parent_field.name}\" = ?"
+
+    items = execute_sql(query, [parent_id], debug: true)
+    puts "Items:"
+    p items
+
+    # Process the joined results
     items.map do |item|
       result = {}
-      @fields.each do |field|
-        result[field.name] = field.fetch_nested_data(item['id']) || item[field.name]
-      end
-      result
+
+      relation_fields.each do |field|
     end
+
+    result
   end
 end
